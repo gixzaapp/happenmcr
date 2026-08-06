@@ -40,6 +40,35 @@ function isPrefetch(request: NextRequest): boolean {
   return false;
 }
 
+const BOT_UA =
+  /bot|crawl|spider|slurp|facebookexternalhit|preview|wget|curl|python-requests|httpclient|headless|phantom|selenium|lighthouse|gtmetrix|pingdom|uptime|monitor|scanner|bytespider|petalbot|semrush|ahrefs|dotbot|gptbot|claudebot|anthropic|chatgpt|openai|perplexity|applebot|bingpreview|duckduckbot|yandex|baidu/i;
+
+function isBot(request: NextRequest): boolean {
+  const ua = request.headers.get("user-agent") ?? "";
+  if (!ua.trim()) return true;
+  return BOT_UA.test(ua);
+}
+
+/**
+ * Only top-level browser document loads.
+ * Skips RSC soft navigations, asset/fetch calls, and most automated clients.
+ */
+function isDocumentNavigation(request: NextRequest): boolean {
+  if (request.headers.get("rsc") === "1") return false;
+  if (request.headers.has("next-router-state-tree")) return false;
+  if (request.headers.has("next-router-prefetch")) return false;
+
+  const dest = request.headers.get("sec-fetch-dest");
+  const mode = request.headers.get("sec-fetch-mode");
+  if (dest && dest !== "document") return false;
+  if (mode && mode !== "navigate") return false;
+
+  const accept = request.headers.get("accept") ?? "";
+  if (accept && !accept.includes("text/html")) return false;
+
+  return true;
+}
+
 function hostnameOf(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-host");
   const raw =
@@ -110,6 +139,8 @@ function trackUniqueVisit(request: NextRequest, response: NextResponse): void {
   if (
     request.method !== "GET" ||
     isPrefetch(request) ||
+    isBot(request) ||
+    !isDocumentNavigation(request) ||
     !shouldTrack(request.nextUrl.pathname)
   ) {
     return;
