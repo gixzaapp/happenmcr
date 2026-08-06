@@ -46,14 +46,11 @@
     letter-spacing: normal;
     text-transform: none;
     display: inline-block;
-    width: 1em;
-    height: 1em;
-    overflow: hidden;
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
+    vertical-align: middle;
     font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-    font-display: optional;
     -webkit-font-smoothing: antialiased;
   }
 }
