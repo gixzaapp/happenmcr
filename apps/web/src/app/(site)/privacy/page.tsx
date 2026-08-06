@@ -48,7 +48,8 @@ const sections = [
       "When you join the newsletter, your email address is encrypted before it is written to our database using industry-standard AES-256-GCM encryption.",
       "We also store a one-way keyed hash of your email so we can recognise repeat sign-ups without keeping a readable copy of the address in an index.",
       "Encryption keys are kept separately from the application database and are not exposed in the public website.",
-      "No newsletters are sent yet from this storage; when email sending is enabled, plaintext emails are reconstructed only for delivery and are not re-saved in readable form.",
+      "When email sending is enabled, we may send a welcome message and a weekly Thursday shortlist via our email provider. Plaintext addresses are reconstructed only for delivery.",
+      "You can unsubscribe using the link in any newsletter email.",
     ],
   },
   {
@@ -84,7 +85,7 @@ const sections = [
     title: "Your rights",
     body: [
       "Depending on where you live (including the UK), you may have rights to access, correct, delete, or restrict use of your personal data, and to object to certain processing.",
-      "To exercise these rights, email hello@happenmcr.com. If you subscribed to the newsletter, you can also unsubscribe using the link in any email once sending is enabled.",
+      "To exercise these rights, email hello@happenmcr.com. If you subscribed to the newsletter, you can also unsubscribe using the link in any email.",
     ],
   },
   {

@@ -25,7 +25,8 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "node-cron": "^4.6.0",
-    "playwright": "^1.62.1"
+    "playwright": "^1.62.1",
+    "resend": "^6.18.1"
   },
   "devDependencies": {
     "@types/cheerio": "^1.0.0",

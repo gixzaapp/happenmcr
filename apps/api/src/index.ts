@@ -4,6 +4,10 @@ import express from "express";
 import type { HealthResponse } from "@happenmcr/types";
 import { prisma } from "./db.js";
 import { getIngestionCronStatus, startIngestionCron } from "./jobs/ingestion-cron.js";
+import {
+  getNewsletterCronStatus,
+  startNewsletterCron,
+} from "./jobs/newsletter-cron.js";
 import eventsRouter from "./routes/events.js";
 import ingestRouter from "./routes/ingest.js";
 import newsletterRouter from "./routes/newsletter.js";
@@ -19,8 +23,15 @@ app.get("/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     const cron = getIngestionCronStatus();
+    const newsletter = getNewsletterCronStatus();
     const body: HealthResponse & {
       cron: {
+        enabled: boolean;
+        schedule: string;
+        running: boolean;
+        lastFinishedAt: string | null;
+      };
+      newsletter: {
         enabled: boolean;
         schedule: string;
         running: boolean;
@@ -35,6 +46,12 @@ app.get("/health", async (_req, res) => {
         schedule: cron.schedule,
         running: cron.running,
         lastFinishedAt: cron.lastFinishedAt,
+      },
+      newsletter: {
+        enabled: newsletter.enabled,
+        schedule: newsletter.schedule,
+        running: newsletter.running,
+        lastFinishedAt: newsletter.lastFinishedAt,
       },
     };
     res.json(body);
@@ -56,4 +73,5 @@ app.use("/newsletter", newsletterRouter);
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
   startIngestionCron();
+  startNewsletterCron();
 });
