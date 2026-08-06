@@ -82,7 +82,11 @@ function addDaysYmd(ymd: string, days: number): string {
 
 export function getTodayRange(reference = new Date()): { start: Date; end: Date } {
   const ymd = ymdInTimeZone(reference, TIME_ZONE);
-  return getDayRange(ymd);
+  const range = getDayRange(ymd);
+  if (!range) {
+    throw new Error(`Unable to resolve London day range for ${ymd}`);
+  }
+  return range;
 }
 
 /** Calendar day range in Europe/London for a `YYYY-MM-DD` civil date. */

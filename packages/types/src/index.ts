@@ -37,7 +37,8 @@ export interface CategoryInfo {
 
 export interface CategoryEventsResponse {
   data: Event[];
-  category: CategoryInfo;
+  /** Present on success; omitted on error payloads. */
+  category?: CategoryInfo;
   error?: string;
 }
 
