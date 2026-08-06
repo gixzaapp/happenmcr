@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #1a1a1a;
+  --muted: #5f5e5e;
+  --surface: #f9f9f9;
+  --surface-2: #f3f3f3;
+  --line: rgb(26 26 26 / 0.1);
+  --accent: #ffcc00;
+  --accent-soft: #ffe08b;
+  --accent-ink: #241a00;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background font-sans text-on-background antialiased;
+  }
+
+  ::selection {
+    @apply bg-bee-yellow text-industrial-black;
+  }
+}
+
+@layer components {
+  .hard-shadow {
+    box-shadow: 4px 4px 0px 0px #ffcc00;
+  }
+
+  .hard-shadow:active {
+    box-shadow: 0px 0px 0px 0px #ffcc00;
+    transform: translate(2px, 2px);
+  }
+
+  .material-symbols-outlined {
+    font-family: "Material Symbols Outlined", sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1.25rem;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    overflow: hidden;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    font-display: optional;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.industrial-line {
+  position: relative;
+}
+
+.industrial-line::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 40px;
+  height: 4px;
+  background: #ffcc00;
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: rise 0.7s ease-out both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  startTime    DateTime @map("start_time")
+  endTime      DateTime? @map("end_time")
+  venueName    String?  @map("venue_name")
+  venueAddress String?  @map("venue_address")
+  lat          Float?
+  lon          Float?
+  category     String?
+  tags         String[] @default([])
+  source       String?
+  sourceUrl    String?  @map("source_url")
+  imageUrl     String?  @map("image_url")
+  ticketUrl    String?  @map("ticket_url")
+  isFree       Boolean  @default(false) @map("is_free")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([startTime])
+  @@index([category])
+  @@index([source])
+  @@map("events")
+}
+
+/** Singleton row for site-wide counters (not shown on public pages). */
+model SiteStat {
+  id        String   @id @default("site")
+  pageviews Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_stats")
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  emailHash      String    @unique @map("email_hash")
+  emailEncrypted String    @map("email_encrypted")
+  source         String?   @default("homepage")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+
+  @@index([createdAt])
+  @@map("newsletter_subscribers")
+}

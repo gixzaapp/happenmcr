@@ -1,0 +1,41 @@
+{
+  "name": "@happenmcr/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "ingest": "tsx scripts/ingest.ts",
+    "scrape": "tsx scripts/scrape.ts",
+    "cron": "tsx scripts/cron-worker.ts",
+    "playwright:install": "playwright install chromium"
+  },
+  "dependencies": {
+    "@happenmcr/types": "workspace:*",
+    "@prisma/client": "^6.19.3",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-cron": "^4.6.0",
+    "playwright": "^1.62.1"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^1.0.0",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.29",
+    "dotenv": "^17.4.2",
+    "prisma": "^6.19.3",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

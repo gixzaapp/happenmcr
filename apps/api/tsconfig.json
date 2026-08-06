@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "src/services/scrapers/venues/_template.example.ts"],
+  "references": [{ "path": "../../packages/types" }]
+}
