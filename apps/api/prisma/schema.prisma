@@ -42,6 +42,15 @@ model SiteStat {
   @@map("site_stats")
 }
 
+/** Unique visitors per Europe/London calendar day (anonymous cookie). */
+model DailyUniqueStat {
+  day       String   @id
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("daily_unique_stats")
+}
+
 model NewsletterSubscriber {
   id             String    @id @default(cuid())
   emailHash      String    @unique @map("email_hash")
