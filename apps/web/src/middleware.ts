@@ -25,6 +25,17 @@ function shouldTrack(pathname: string): boolean {
   return true;
 }
 
+/** Next.js <Link prefetch> and browser prefetch — must not count as pageviews. */
+function isPrefetch(request: NextRequest): boolean {
+  if (request.headers.get("next-router-prefetch") === "1") return true;
+  if (request.headers.get("x-middleware-prefetch") === "1") return true;
+  const purpose = request.headers.get("purpose")?.toLowerCase();
+  if (purpose === "prefetch") return true;
+  const secPurpose = request.headers.get("sec-purpose")?.toLowerCase();
+  if (secPurpose === "prefetch") return true;
+  return false;
+}
+
 function hostnameOf(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-host");
   const raw =
@@ -81,7 +92,11 @@ export function middleware(request: NextRequest) {
   const redirected = seoRedirect(request);
   if (redirected) return redirected;
 
-  if (request.method === "GET" && shouldTrack(request.nextUrl.pathname)) {
+  if (
+    request.method === "GET" &&
+    !isPrefetch(request) &&
+    shouldTrack(request.nextUrl.pathname)
+  ) {
     const apiBase =
       process.env.API_URL?.replace(/\/$/, "") ||
       process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
