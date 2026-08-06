@@ -26,45 +26,55 @@ function shouldTrack(pathname: string): boolean {
 }
 
 function hostnameOf(request: NextRequest): string {
-  const raw = request.headers.get("host") ?? request.nextUrl.host;
+  const forwarded = request.headers.get("x-forwarded-host");
+  const raw =
+    forwarded?.split(",")[0]?.trim() ||
+    request.headers.get("host") ||
+    request.nextUrl.host;
   return raw.split(":")[0]?.toLowerCase() ?? "";
 }
 
 function requestProto(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-proto");
-  if (forwarded) return forwarded.split(",")[0]?.trim().toLowerCase() ?? "https";
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim().toLowerCase() || "https";
+  }
   return request.nextUrl.protocol.replace(":", "").toLowerCase();
 }
 
-/** 308 URL hygiene: https, apex host, no trailing slash. */
+/**
+ * 308 URL hygiene for production hostnames.
+ * Build the Location from Host / X-Forwarded-* — never from nextUrl's
+ * internal upstream host (often `localhost:3000` behind nginx).
+ */
 function seoRedirect(request: NextRequest): NextResponse | null {
   const host = hostnameOf(request);
   const isCanonicalFamily =
     host === CANONICAL_HOST || host === `www.${CANONICAL_HOST}`;
 
-  const url = request.nextUrl.clone();
-  let changed = false;
+  if (!isCanonicalFamily) return null;
 
-  if (isCanonicalFamily) {
-    if (host === `www.${CANONICAL_HOST}`) {
-      url.hostname = CANONICAL_HOST;
-      changed = true;
-    }
+  const targetHost = CANONICAL_HOST;
+  const incomingProto = requestProto(request);
+  const targetProto = incomingProto === "http" ? "https" : incomingProto;
 
-    if (requestProto(request) === "http") {
-      url.protocol = "https:";
-      changed = true;
-    }
+  let pathname = request.nextUrl.pathname;
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    pathname = pathname.replace(/\/+$/, "") || "/";
   }
 
-  // Strip trailing slash for all hosts (matches next.config trailingSlash: false).
-  if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
-    url.pathname = url.pathname.replace(/\/+$/, "") || "/";
-    changed = true;
-  }
+  const needsRedirect =
+    host !== targetHost ||
+    incomingProto === "http" ||
+    pathname !== request.nextUrl.pathname;
 
-  if (!changed) return null;
-  return NextResponse.redirect(url, 308);
+  if (!needsRedirect) return null;
+
+  const destination = new URL(
+    `${pathname}${request.nextUrl.search}`,
+    `${targetProto}://${targetHost}`,
+  );
+  return NextResponse.redirect(destination, 308);
 }
 
 export function middleware(request: NextRequest) {
