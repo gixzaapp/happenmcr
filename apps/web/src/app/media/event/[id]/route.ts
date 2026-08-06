@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { fetchResizedEventImage } from "@/lib/event-media";
+import {
+  fetchResizedEventImage,
+  type EventImageVariant,
+} from "@/lib/event-media";
 
 export const runtime = "nodejs";
 export const revalidate = 600;
@@ -7,6 +10,11 @@ export const revalidate = 600;
 type RouteContext = {
   params: { id: string };
 };
+
+function parseVariant(value: string | null): EventImageVariant {
+  if (value === "og" || value === "card" || value === "hero") return value;
+  return "hero";
+}
 
 async function loadDefaultOg(): Promise<Response> {
   const origin =
@@ -16,7 +24,7 @@ async function loadDefaultOg(): Promise<Response> {
     next: { revalidate: 86_400 },
   });
   if (!upstream.ok) {
-    return new NextResponse("OG image unavailable", { status: 404 });
+    return new NextResponse("Image unavailable", { status: 404 });
   }
   const buffer = Buffer.from(await upstream.arrayBuffer());
   return new NextResponse(buffer, {
@@ -27,11 +35,15 @@ async function loadDefaultOg(): Promise<Response> {
   });
 }
 
-/** WhatsApp-friendly resized event image served from happenmcr.com. */
-export async function GET(_request: Request, context: RouteContext) {
+/** Resized event images for heroes / cards (WhatsApp OG uses /og/event). */
+export async function GET(request: Request, context: RouteContext) {
+  const variant = parseVariant(new URL(request.url).searchParams.get("v"));
+
   try {
-    const resized = await fetchResizedEventImage(context.params.id, "og");
-    if (!resized) return loadDefaultOg();
+    const resized = await fetchResizedEventImage(context.params.id, variant);
+    if (!resized) {
+      return variant === "og" ? loadDefaultOg() : new NextResponse(null, { status: 404 });
+    }
 
     return new NextResponse(new Uint8Array(resized.body), {
       headers: {
@@ -40,7 +52,9 @@ export async function GET(_request: Request, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error("[og/event] failed", context.params.id, error);
-    return loadDefaultOg();
+    console.error("[media/event] failed", context.params.id, error);
+    return variant === "og"
+      ? loadDefaultOg()
+      : new NextResponse(null, { status: 404 });
   }
 }

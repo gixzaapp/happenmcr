@@ -14,6 +14,7 @@ const SKIP_PREFIXES = [
   "/robots.txt",
   "/sitemap",
   "/og/",
+  "/media/",
   "/opengraph-image",
 ];
 

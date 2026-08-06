@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Event } from "@happenmcr/types";
 import { buildCategoryPath, buildVenuePath } from "@happenmcr/types";
 import { eventImageAlt } from "@/lib/a11y";
+import { eventMediaPath } from "@/lib/event-media";
 import { formatEventDateLong } from "@/lib/format";
 import { shouldUseSymbolicEventImage } from "@/lib/source";
 import { EventBackButton } from "./EventBackButton";
@@ -27,6 +28,9 @@ export function EventDetail({ event }: EventDetailProps) {
     : null;
   const primaryUrl = event.ticket_url || event.source_url;
   const useSymbolic = shouldUseSymbolicEventImage(event.source);
+  const heroSrc = event.image_url
+    ? eventMediaPath(event.id, "hero")
+    : null;
 
   return (
     <article>
@@ -37,12 +41,13 @@ export function EventDetail({ event }: EventDetailProps) {
             className="p-8 sm:p-12"
             titleClassName="max-w-3xl text-2xl sm:text-4xl line-clamp-3"
           />
-        ) : event.image_url ? (
+        ) : heroSrc ? (
           <Image
-            src={event.image_url}
+            src={heroSrc}
             alt={eventImageAlt(event.title, event.venue_name)}
             fill
             priority
+            unoptimized
             sizes="100vw"
             className="object-cover"
           />
