@@ -50,23 +50,38 @@ function isBot(request: NextRequest): boolean {
 }
 
 /**
- * Only top-level browser document loads.
- * Skips RSC soft navigations, asset/fetch calls, and most automated clients.
+ * Real user navigations: full document loads OR App Router client transitions.
+ * Prefetches and non-navigation fetches are excluded elsewhere.
  */
-function isDocumentNavigation(request: NextRequest): boolean {
-  if (request.headers.get("rsc") === "1") return false;
-  if (request.headers.has("next-router-state-tree")) return false;
+function isUserNavigation(request: NextRequest): boolean {
   if (request.headers.has("next-router-prefetch")) return false;
 
   const dest = request.headers.get("sec-fetch-dest");
+  // Ignore subresource loads when the browser labels them.
+  if (
+    dest &&
+    dest !== "document" &&
+    dest !== "empty" // App Router client navigations often use "empty"
+  ) {
+    return false;
+  }
+
   const mode = request.headers.get("sec-fetch-mode");
-  if (dest && dest !== "document") return false;
-  if (mode && mode !== "navigate") return false;
+  if (mode && mode !== "navigate" && mode !== "cors" && mode !== "same-origin") {
+    return false;
+  }
+
+  // Full page load
+  if (dest === "document") return true;
+
+  // Client-side route change (RSC)
+  if (request.headers.get("rsc") === "1") return true;
+  if (request.headers.has("next-router-state-tree")) return true;
 
   const accept = request.headers.get("accept") ?? "";
-  if (accept && !accept.includes("text/html")) return false;
+  if (accept.includes("text/html")) return true;
 
-  return true;
+  return false;
 }
 
 function hostnameOf(request: NextRequest): string {
@@ -140,7 +155,7 @@ function trackUniqueVisit(request: NextRequest, response: NextResponse): void {
     request.method !== "GET" ||
     isPrefetch(request) ||
     isBot(request) ||
-    !isDocumentNavigation(request) ||
+    !isUserNavigation(request) ||
     !shouldTrack(request.nextUrl.pathname)
   ) {
     return;
@@ -172,10 +187,11 @@ function trackUniqueVisit(request: NextRequest, response: NextResponse): void {
     maxAge: VID_MAX_AGE,
   });
 
+  // Prefer public API URL — Edge middleware often cannot reach 127.0.0.1.
   const apiBase =
-    process.env.API_URL?.replace(/\/$/, "") ||
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-    "http://localhost:4000";
+    process.env.API_URL?.replace(/\/$/, "") ||
+    "http://127.0.0.1:4000";
 
   void fetch(`${apiBase}/stats/unique-visit`, {
     method: "POST",
