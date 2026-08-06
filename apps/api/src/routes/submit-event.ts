@@ -1,7 +1,7 @@
 import { Router, type Router as ExpressRouter } from "express";
 import multer from "multer";
 import { prisma } from "../db.js";
-import { sendEmail, isNewsletterSendingConfigured } from "../services/newsletter/mailer.js";
+import { notifyEventSubmission } from "../services/submit-event/notify.js";
 import { getObjectStorage } from "../services/storage/index.js";
 import {
   buildPromoImageKey,
@@ -169,78 +169,32 @@ router.post("/", (req, res, next) => {
       },
     });
 
-    if (isNewsletterSendingConfigured()) {
-      const notifyTo =
-        process.env.EVENT_SUBMISSION_TO?.trim() || "hello@happenmcr.com";
-      const when = startTime.toLocaleString("en-GB", {
-        timeZone: "Europe/London",
-        dateStyle: "full",
-        timeStyle: "short",
+    // Await notify so PM2 logs always show success/failure for this request.
+    let notified = false;
+    try {
+      const notify = await notifyEventSubmission({
+        id: submission.id,
+        title,
+        startTime,
+        venueName,
+        description,
+        isFree,
+        ticketUrl,
+        promoImageUrl,
+        contactEmail,
       });
-      const pricingLabel = isFree ? "Free" : "Paid";
-      const urlLabel = isFree ? "Event page" : "Tickets";
-      const urlLine = ticketUrl ? `${urlLabel}: ${ticketUrl}` : `${urlLabel}: (none)`;
-      const imageLine = promoImageUrl
-        ? `Promo image: ${promoImageUrl}`
-        : "Promo image: (none)";
-
-      void sendEmail({
-        to: notifyTo,
-        subject: `New event submission: ${title}`,
-        text: `New HappenMCR event submission
-
-Title: ${title}
-When: ${when}
-Venue: ${venueName}
-Pricing: ${pricingLabel}
-${urlLine}
-${imageLine}
-Contact: ${contactEmail}
-Submission ID: ${submission.id}
-
-Description:
-${description}
-`,
-        html: `<!doctype html>
-<html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
-  <h1 style="font-size:20px">New event submission</h1>
-  <p><strong>Title:</strong> ${escapeHtml(title)}</p>
-  <p><strong>When:</strong> ${escapeHtml(when)}</p>
-  <p><strong>Venue:</strong> ${escapeHtml(venueName)}</p>
-  <p><strong>Pricing:</strong> ${escapeHtml(pricingLabel)}</p>
-  <p><strong>${escapeHtml(urlLabel)}:</strong> ${
-    ticketUrl
-      ? `<a href="${escapeHtml(ticketUrl)}">${escapeHtml(ticketUrl)}</a>`
-      : "(none)"
-  }</p>
-  <p><strong>Promo image:</strong> ${
-    promoImageUrl
-      ? `<a href="${escapeHtml(promoImageUrl)}">${escapeHtml(promoImageUrl)}</a><br/><img src="${escapeHtml(promoImageUrl)}" alt="" width="320" style="max-width:100%;height:auto;margin-top:8px" />`
-      : "(none)"
-  }</p>
-  <p><strong>Contact:</strong> <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a></p>
-  <p><strong>ID:</strong> ${escapeHtml(submission.id)}</p>
-  <hr />
-  <p style="white-space:pre-wrap">${escapeHtml(description)}</p>
-</body></html>`,
-      }).catch((error) => {
-        console.error("[submit-event] notify email failed", error);
-      });
+      notified = Boolean(notify);
+    } catch (error) {
+      console.error("[submit-event] notify email failed", error);
     }
 
-    res.status(201).json({ data: { ok: true, id: submission.id } });
+    res.status(201).json({
+      data: { ok: true, id: submission.id, notified },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Could not submit the event. Try again." });
   }
 });
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
 
 export default router;

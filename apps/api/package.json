@@ -16,6 +16,8 @@
     "ingest": "tsx scripts/ingest.ts",
     "scrape": "tsx scripts/scrape.ts",
     "cron": "tsx scripts/cron-worker.ts",
+    "list-submissions": "tsx scripts/list-submissions.ts",
+    "test-submission-notify": "tsx scripts/test-submission-notify.ts",
     "playwright:install": "playwright install chromium"
   },
   "dependencies": {
