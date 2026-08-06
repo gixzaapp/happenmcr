@@ -150,7 +150,10 @@ function cookieSecure(request: NextRequest): boolean {
 }
 
 /** Count at most one unique visitor per anonymous cookie per London calendar day. */
-function trackUniqueVisit(request: NextRequest, response: NextResponse): void {
+async function trackUniqueVisit(
+  request: NextRequest,
+  response: NextResponse,
+): Promise<void> {
   if (
     request.method !== "GET" ||
     isPrefetch(request) ||
@@ -182,32 +185,36 @@ function trackUniqueVisit(request: NextRequest, response: NextResponse): void {
   const lastDay = request.cookies.get(COOKIE_UV_DAY)?.value;
   if (lastDay === today) return;
 
-  response.cookies.set(COOKIE_UV_DAY, today, {
-    ...cookieBase,
-    maxAge: VID_MAX_AGE,
-  });
-
   // Prefer public API URL — Edge middleware often cannot reach 127.0.0.1.
   const apiBase =
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
     process.env.API_URL?.replace(/\/$/, "") ||
     "http://127.0.0.1:4000";
 
-  void fetch(`${apiBase}/stats/unique-visit`, {
-    method: "POST",
-    cache: "no-store",
-    headers: { "content-type": "application/json" },
-  }).catch(() => {
+  try {
+    const res = await fetch(`${apiBase}/stats/unique-visit`, {
+      method: "POST",
+      cache: "no-store",
+      headers: { "content-type": "application/json" },
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!res.ok) return;
+    // Only mark the day after a successful write (avoids stuck-at-0).
+    response.cookies.set(COOKIE_UV_DAY, today, {
+      ...cookieBase,
+      maxAge: VID_MAX_AGE,
+    });
+  } catch {
     // Ignore analytics failures
-  });
+  }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const redirected = seoRedirect(request);
   if (redirected) return redirected;
 
   const response = NextResponse.next();
-  trackUniqueVisit(request, response);
+  await trackUniqueVisit(request, response);
   return response;
 }
 
