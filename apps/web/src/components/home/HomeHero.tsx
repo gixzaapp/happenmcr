@@ -82,12 +82,12 @@ export function HomeHero({ todayEvents = [] }: HomeHeroProps) {
                 arrow_forward
               </span>
             </Link>
-            <a
-              href="#newsletter"
+            <Link
+              href="/submit-event"
               className="inline-flex items-center rounded-lg border-2 border-canvas-white px-8 py-4 font-display text-headline-sm text-canvas-white transition-colors hover:bg-canvas-white hover:text-industrial-black"
             >
               Submit Event
-            </a>
+            </Link>
           </div>
         </div>
 

@@ -22,6 +22,7 @@ export const timingNav: NavItem[] = [
 export const footerNav: NavItem[] = [
   ...timingNav,
   { href: "/search", label: "Search" },
+  { href: "/submit-event", label: "Submit Event" },
   { href: "#newsletter", label: "Newsletter" },
   { href: "/privacy", label: "Privacy" },
 ];

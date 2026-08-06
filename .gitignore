@@ -25,3 +25,7 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local promo image uploads (swap to S3 later)
+uploads
+apps/api/uploads

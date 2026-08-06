@@ -79,9 +79,6 @@ export function SiteFooter() {
               {item.label}
             </Link>
           ))}
-          <span className="text-body-md text-secondary-fixed-dim">
-            Submit Event
-          </span>
         </div>
 
         <div className="flex items-center gap-6">
