@@ -13,6 +13,8 @@ const SKIP_PREFIXES = [
   "/getmethevisitorcount",
   "/robots.txt",
   "/sitemap",
+  "/og/",
+  "/opengraph-image",
 ];
 
 function shouldTrack(pathname: string): boolean {

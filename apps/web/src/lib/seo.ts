@@ -117,6 +117,8 @@ export function buildPageMetadata(options: PageSeoOptions): Metadata {
         {
           url: ogImage,
           alt: ogImageAlt,
+          width: 1200,
+          height: 630,
         },
       ],
     },

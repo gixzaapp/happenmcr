@@ -16,6 +16,7 @@ import {
 } from "@/lib/jsonld";
 import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import { buildPageMetadata, truncateSeoText } from "@/lib/seo";
+import { getSiteUrl } from "@/lib/config";
 import { canShowEventImage } from "@/lib/source";
 
 /** ISR: event detail HTML for crawlers, refreshed every 10 minutes. */
@@ -81,7 +82,7 @@ export async function generateMetadata({
       `${event.title}${where} — ${when}. Find what's on in Manchester on HappenMCR.`,
   );
   const shareImage = canShowEventImage(event.source, event.image_url)
-    ? event.image_url
+    ? `${getSiteUrl()}/og/event/${event.id}`
     : null;
   const keywords = [
     event.title,
