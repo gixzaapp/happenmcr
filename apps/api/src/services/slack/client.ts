@@ -19,27 +19,43 @@ export function getSlackSigningSecret(): string | null {
 
 export function verifySlackSignature(req: Request): boolean {
   const secret = getSlackSigningSecret();
-  if (!secret) return false;
+  if (!secret) {
+    console.error("[slack] SLACK_SIGNING_SECRET is not set");
+    return false;
+  }
 
   const timestamp = req.header("x-slack-request-timestamp");
   const signature = req.header("x-slack-signature");
   const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
 
-  if (!timestamp || !signature || !rawBody) return false;
+  if (!timestamp || !signature) {
+    console.error("[slack] missing signature headers");
+    return false;
+  }
+  if (!rawBody?.length) {
+    console.error("[slack] missing rawBody for signature check");
+    return false;
+  }
 
   const ageSec = Math.abs(Date.now() / 1000 - Number(timestamp));
-  if (!Number.isFinite(ageSec) || ageSec > 60 * 5) return false;
+  if (!Number.isFinite(ageSec) || ageSec > 60 * 5) {
+    console.error("[slack] signature timestamp too old/invalid", { ageSec });
+    return false;
+  }
 
   const base = `v0:${timestamp}:${rawBody.toString("utf8")}`;
   const digest = createHmac("sha256", secret).update(base).digest("hex");
   const expected = `v0=${digest}`;
 
   try {
-    return timingSafeEqual(
+    const ok = timingSafeEqual(
       Buffer.from(expected, "utf8"),
       Buffer.from(signature, "utf8"),
     );
+    if (!ok) console.error("[slack] signature mismatch");
+    return ok;
   } catch {
+    console.error("[slack] signature compare failed");
     return false;
   }
 }
@@ -77,11 +93,14 @@ export async function postSlackMessage(input: {
   text: string;
   blocks: unknown[];
 }): Promise<SlackPostResult> {
-  const data = await slackApi<{ channel: string; ts: string }>("chat.postMessage", {
-    channel: input.channel,
-    text: input.text,
-    blocks: input.blocks,
-  });
+  const data = await slackApi<{ channel: string; ts: string }>(
+    "chat.postMessage",
+    {
+      channel: input.channel,
+      text: input.text,
+      blocks: input.blocks,
+    },
+  );
   return { channel: data.channel, ts: data.ts };
 }
 

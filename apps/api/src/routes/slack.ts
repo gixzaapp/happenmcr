@@ -4,10 +4,7 @@ import {
   rejectSubmission,
   SubmissionReviewError,
 } from "../services/submit-event/review.js";
-import {
-  postSlackResponseUrl,
-  verifySlackSignature,
-} from "../services/slack/client.js";
+import { verifySlackSignature } from "../services/slack/client.js";
 import { buildSubmissionBlocks } from "../services/slack/submission-notify.js";
 
 const router: ExpressRouter = Router();
@@ -30,6 +27,8 @@ function reviewerLabel(payload: SlackActionPayload): string {
 
 router.post("/interactions", async (req, res) => {
   try {
+    console.info("[slack] interaction received");
+
     if (!verifySlackSignature(req)) {
       res.status(401).send("invalid signature");
       return;
@@ -38,13 +37,14 @@ router.post("/interactions", async (req, res) => {
     const rawPayload =
       typeof req.body?.payload === "string" ? req.body.payload : "";
     if (!rawPayload) {
+      console.error("[slack] missing payload field");
       res.status(400).send("missing payload");
       return;
     }
 
     const payload = JSON.parse(rawPayload) as SlackActionPayload;
     if (payload.type !== "block_actions") {
-      res.status(200).send("");
+      res.status(200).json({});
       return;
     }
 
@@ -52,18 +52,16 @@ router.post("/interactions", async (req, res) => {
     const submissionId = action?.value?.trim();
     const actionId = action?.action_id;
     if (!submissionId || !actionId) {
-      res.status(200).send("");
+      res.status(200).json({});
       return;
     }
 
-    // Acknowledge quickly; do work then update via response_url.
-    res.status(200).send("");
-
     const reviewedBy = `slack:${reviewerLabel(payload)}`;
-    let state: "approved" | "rejected";
-    let result;
 
     try {
+      let state: "approved" | "rejected";
+      let result;
+
       if (actionId === "submission_approve") {
         result = await approveSubmission(submissionId, reviewedBy);
         state = "approved";
@@ -71,40 +69,38 @@ router.post("/interactions", async (req, res) => {
         result = await rejectSubmission(submissionId, reviewedBy);
         state = "rejected";
       } else {
+        res.status(200).json({});
         return;
       }
+
+      const { text, blocks } = buildSubmissionBlocks(
+        result.submission,
+        state,
+        reviewedBy,
+      );
+
+      // Return the updated message in the ack (Slack replaces the original).
+      res.status(200).json({
+        replace_original: true,
+        text,
+        blocks,
+      });
+
+      console.info(
+        `[slack] submission ${state} id=${submissionId} by=${reviewedBy}`,
+      );
     } catch (error) {
       const message =
         error instanceof SubmissionReviewError
           ? error.message
           : "Could not update submission.";
-      if (payload.response_url) {
-        await postSlackResponseUrl(payload.response_url, {
-          replace_original: true,
-          text: `Could not process submission: ${message}`,
-        });
-      }
       console.error("[slack] interaction failed", error);
-      return;
-    }
-
-    const { text, blocks } = buildSubmissionBlocks(
-      result.submission,
-      state,
-      reviewedBy,
-    );
-
-    if (payload.response_url) {
-      await postSlackResponseUrl(payload.response_url, {
-        replace_original: true,
-        text,
-        blocks,
+      res.status(200).json({
+        replace_original: false,
+        text: `Could not process submission: ${message}`,
+        response_type: "ephemeral",
       });
     }
-
-    console.info(
-      `[slack] submission ${state} id=${submissionId} by=${reviewedBy}`,
-    );
   } catch (error) {
     console.error("[slack] interactions error", error);
     if (!res.headersSent) {

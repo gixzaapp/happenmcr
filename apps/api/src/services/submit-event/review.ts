@@ -1,9 +1,12 @@
 import type { Event, EventSubmission } from "@prisma/client";
 import { prisma } from "../../db.js";
+import { notifyOrganiserOutcome } from "./organiser-notify.js";
 
 export type ReviewResult = {
   submission: EventSubmission;
   event: Event | null;
+  /** True when status changed on this call (so callers can tell if mail was queued). */
+  outcomeChanged: boolean;
 };
 
 export class SubmissionReviewError extends Error {
@@ -20,7 +23,7 @@ export async function approveSubmission(
   id: string,
   reviewedBy: string,
 ): Promise<ReviewResult> {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const submission = await tx.eventSubmission.findUnique({ where: { id } });
     if (!submission) {
       throw new SubmissionReviewError("Submission not found.", 404);
@@ -29,7 +32,7 @@ export async function approveSubmission(
       const event = await tx.event.findUnique({
         where: { id: submission.publishedEventId },
       });
-      return { submission, event };
+      return { submission, event, outcomeChanged: false };
     }
     if (submission.status !== "pending") {
       throw new SubmissionReviewError(
@@ -63,8 +66,18 @@ export async function approveSubmission(
       },
     });
 
-    return { submission: updated, event };
+    return { submission: updated, event, outcomeChanged: true };
   });
+
+  if (result.outcomeChanged) {
+    void notifyOrganiserOutcome({
+      submission: result.submission,
+      outcome: "approved",
+      event: result.event,
+    });
+  }
+
+  return result;
 }
 
 export async function rejectSubmission(
@@ -76,7 +89,7 @@ export async function rejectSubmission(
     throw new SubmissionReviewError("Submission not found.", 404);
   }
   if (submission.status === "rejected") {
-    return { submission, event: null };
+    return { submission, event: null, outcomeChanged: false };
   }
   if (submission.status !== "pending") {
     throw new SubmissionReviewError(
@@ -94,5 +107,10 @@ export async function rejectSubmission(
     },
   });
 
-  return { submission: updated, event: null };
+  void notifyOrganiserOutcome({
+    submission: updated,
+    outcome: "rejected",
+  });
+
+  return { submission: updated, event: null, outcomeChanged: true };
 }

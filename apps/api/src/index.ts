@@ -32,6 +32,7 @@ app.use(
   "/slack/interactions",
   express.urlencoded({
     extended: true,
+    type: "application/x-www-form-urlencoded",
     verify: (req, _res, buf) => {
       (req as express.Request & { rawBody?: Buffer }).rawBody = Buffer.from(buf);
     },
