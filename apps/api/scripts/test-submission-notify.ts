@@ -4,8 +4,14 @@
  * Usage (from apps/api):
  *   pnpm exec tsx scripts/test-submission-notify.ts
  */
-import "dotenv/config";
-import { notifyEventSubmission } from "../src/services/submit-event/notify.js";
+import "../src/load-env.js";
+
+const to = process.env.EVENT_SUBMISSION_TO?.trim() || "(unset)";
+console.log(`EVENT_SUBMISSION_TO from env = ${to}`);
+
+const { notifyEventSubmission } = await import(
+  "../src/services/submit-event/notify.js"
+);
 
 const result = await notifyEventSubmission({
   id: "test-local",

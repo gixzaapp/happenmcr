@@ -13,8 +13,8 @@ export type SubmissionNotifyInput = {
 };
 
 function parseRecipients(): string[] {
-  const raw =
-    process.env.EVENT_SUBMISSION_TO?.trim() || "hello@happenmcr.com";
+  const raw = process.env.EVENT_SUBMISSION_TO?.trim();
+  if (!raw) return [];
   return raw
     .split(",")
     .map((part) => part.trim().toLowerCase())
@@ -45,14 +45,10 @@ export async function notifyEventSubmission(
 
   const to = parseRecipients();
   if (to.length === 0) {
-    console.warn("[submit-event] notify skipped — EVENT_SUBMISSION_TO is empty");
-    return null;
-  }
-
-  if (!process.env.EVENT_SUBMISSION_TO?.trim()) {
-    console.warn(
-      "[submit-event] EVENT_SUBMISSION_TO unset — using default hello@happenmcr.com. Set EVENT_SUBMISSION_TO to an inbox that can receive mail (e.g. your Gmail).",
+    console.error(
+      "[submit-event] notify skipped — set EVENT_SUBMISSION_TO in apps/api/.env to a real inbox",
     );
+    return null;
   }
 
   const when = input.startTime.toLocaleString("en-GB", {

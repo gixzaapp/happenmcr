@@ -1,4 +1,5 @@
-import "dotenv/config";
+import "./load-env.js";
+
 import cors from "cors";
 import express from "express";
 import type { HealthResponse } from "@happenmcr/types";
@@ -8,10 +9,16 @@ import {
   getNewsletterCronStatus,
   startNewsletterCron,
 } from "./jobs/newsletter-cron.js";
+import {
+  getSlackNotifyCronStatus,
+  startSlackNotifyCron,
+} from "./jobs/slack-notify-cron.js";
 import { localUploadsAbsoluteDir } from "./services/storage/index.js";
 import eventsRouter from "./routes/events.js";
+import eventSubmissionsRouter from "./routes/event-submissions.js";
 import ingestRouter from "./routes/ingest.js";
 import newsletterRouter from "./routes/newsletter.js";
+import slackRouter from "./routes/slack.js";
 import statsRouter from "./routes/stats.js";
 import submitEventRouter from "./routes/submit-event.js";
 
@@ -19,6 +26,19 @@ const app = express();
 const port = Number(process.env.PORT) || 4000;
 
 app.use(cors());
+
+// Slack interactions need the raw body for signature verification.
+app.use(
+  "/slack/interactions",
+  express.urlencoded({
+    extended: true,
+    verify: (req, _res, buf) => {
+      (req as express.Request & { rawBody?: Buffer }).rawBody = Buffer.from(buf);
+    },
+  }),
+);
+app.use("/slack", slackRouter);
+
 app.use(express.json());
 
 // Local promo images — swap STORAGE_DRIVER=s3 later; this static mount is unused then.
@@ -36,6 +56,7 @@ app.get("/health", async (_req, res) => {
     await prisma.$queryRaw`SELECT 1`;
     const cron = getIngestionCronStatus();
     const newsletter = getNewsletterCronStatus();
+    const slack = getSlackNotifyCronStatus();
     const body: HealthResponse & {
       cron: {
         enabled: boolean;
@@ -44,6 +65,12 @@ app.get("/health", async (_req, res) => {
         lastFinishedAt: string | null;
       };
       newsletter: {
+        enabled: boolean;
+        schedule: string;
+        running: boolean;
+        lastFinishedAt: string | null;
+      };
+      slackNotify: {
         enabled: boolean;
         schedule: string;
         running: boolean;
@@ -65,6 +92,12 @@ app.get("/health", async (_req, res) => {
         running: newsletter.running,
         lastFinishedAt: newsletter.lastFinishedAt,
       },
+      slackNotify: {
+        enabled: slack.enabled,
+        schedule: slack.schedule,
+        running: slack.running,
+        lastFinishedAt: slack.lastFinishedAt,
+      },
     };
     res.json(body);
   } catch {
@@ -78,6 +111,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/events", eventsRouter);
+app.use("/event-submissions", eventSubmissionsRouter);
 app.use("/ingest", ingestRouter);
 app.use("/stats", statsRouter);
 app.use("/newsletter", newsletterRouter);
@@ -87,4 +121,5 @@ app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
   startIngestionCron();
   startNewsletterCron();
+  startSlackNotifyCron();
 });

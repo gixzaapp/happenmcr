@@ -65,20 +65,29 @@ model NewsletterSubscriber {
 
 /** Community / organiser submitted events awaiting review. */
 model EventSubmission {
-  id             String   @id @default(cuid())
-  title          String
-  startTime      DateTime @map("start_time")
-  venueName      String   @map("venue_name")
-  description    String
-  isFree         Boolean  @default(false) @map("is_free")
-  ticketUrl      String?  @map("ticket_url")
-  promoImageKey  String?  @map("promo_image_key")
-  promoImageUrl  String?  @map("promo_image_url")
-  contactEmail   String   @map("contact_email")
-  status         String   @default("pending")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id                  String    @id @default(cuid())
+  title               String
+  startTime           DateTime  @map("start_time")
+  venueName           String    @map("venue_name")
+  description         String
+  isFree              Boolean   @default(false) @map("is_free")
+  ticketUrl           String?   @map("ticket_url")
+  promoImageKey       String?   @map("promo_image_key")
+  promoImageUrl       String?   @map("promo_image_url")
+  contactEmail        String    @map("contact_email")
+  status              String    @default("pending")
+  reviewedAt          DateTime? @map("reviewed_at")
+  reviewedBy          String?   @map("reviewed_by")
+  publishedEventId    String?   @map("published_event_id")
+  slackChannelId      String?   @map("slack_channel_id")
+  slackMessageTs      String?   @map("slack_message_ts")
+  slackNotifyStatus   String    @default("pending") @map("slack_notify_status")
+  slackNotifyAttempts Int       @default(0) @map("slack_notify_attempts")
+  slackNotifyLastError String?  @map("slack_notify_last_error")
+  createdAt           DateTime  @default(now()) @map("created_at")
 
   @@index([createdAt])
   @@index([status])
+  @@index([slackNotifyStatus])
   @@map("event_submissions")
 }

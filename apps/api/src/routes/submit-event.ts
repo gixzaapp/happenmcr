@@ -2,6 +2,7 @@ import { Router, type Router as ExpressRouter } from "express";
 import multer from "multer";
 import { prisma } from "../db.js";
 import { notifyEventSubmission } from "../services/submit-event/notify.js";
+import { notifySubmissionOnSlack } from "../services/slack/submission-notify.js";
 import { getObjectStorage } from "../services/storage/index.js";
 import {
   buildPromoImageKey,
@@ -188,8 +189,16 @@ router.post("/", (req, res, next) => {
       console.error("[submit-event] notify email failed", error);
     }
 
+    let slackNotified = false;
+    try {
+      const slack = await notifySubmissionOnSlack(submission.id);
+      slackNotified = slack === "sent";
+    } catch (error) {
+      console.error("[submit-event] slack notify failed", error);
+    }
+
     res.status(201).json({
-      data: { ok: true, id: submission.id, notified },
+      data: { ok: true, id: submission.id, notified, slackNotified },
     });
   } catch (error) {
     console.error(error);
