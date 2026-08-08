@@ -38,8 +38,10 @@ async function fetchEvents(
   }
 }
 
-export function getAllEvents(): Promise<Event[]> {
-  return fetchEvents("/events");
+export function getAllEvents(
+  options: FetchEventsOptions = {},
+): Promise<Event[]> {
+  return fetchEvents("/events", options);
 }
 
 export function getTodayEvents(): Promise<Event[]> {

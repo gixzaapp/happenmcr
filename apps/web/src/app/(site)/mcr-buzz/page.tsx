@@ -12,10 +12,10 @@ import {
   mcrBuzzLabelList,
   mcrBuzzPath,
 } from "@/lib/mcr-buzz";
-import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import { buildPageMetadata } from "@/lib/seo";
 
-export const revalidate = REVALIDATE_SECONDS;
+/** Always fresh — avoid sticky empty ISR after deploy/ingest. */
+export const dynamic = "force-dynamic";
 
 const labelList = mcrBuzzLabelList();
 
@@ -33,7 +33,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function McrBuzzHubPage() {
-  const allEvents = await getAllEvents();
+  const allEvents = await getAllEvents({ cache: "no-store" });
   const sections = listMcrBuzzSections();
 
   return (

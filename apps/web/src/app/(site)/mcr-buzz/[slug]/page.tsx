@@ -15,11 +15,10 @@ import {
   mcrBuzzPath,
   mcrBuzzSiblingLinks,
 } from "@/lib/mcr-buzz";
-import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import { buildPageMetadata } from "@/lib/seo";
 
-export const revalidate = REVALIDATE_SECONDS;
-/** Unknown slugs 404; new registry entries are picked up on rebuild. */
+/** Always fresh — avoid sticky empty ISR after deploy/ingest. */
+export const dynamic = "force-dynamic";
 export const dynamicParams = false;
 
 type McrBuzzPageProps = {
@@ -63,7 +62,10 @@ export default async function McrBuzzSectionPage({ params }: McrBuzzPageProps) {
   const section = getMcrBuzzSection(params.slug);
   if (!section) notFound();
 
-  const events = filterMcrBuzzEvents(await getAllEvents(), section);
+  const events = filterMcrBuzzEvents(
+    await getAllEvents({ cache: "no-store" }),
+    section,
+  );
   const path = mcrBuzzPath(section.slug);
   const countLabel =
     events.length === 1 ? "1 local event" : `${events.length} local events`;

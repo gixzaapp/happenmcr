@@ -31,6 +31,15 @@ const LOCAL_SOURCES = new Set([
   "scraper:rncm",
 ]);
 
+/** These sources always belong on the Student Buzz page. */
+const STUDENT_SOURCES = new Set([
+  "scraper:university-of-manchester",
+  "scraper:manchester-met",
+  "scraper:university-of-salford",
+  "scraper:university-of-greater-manchester",
+  "scraper:rncm",
+]);
+
 /**
  * Single source of truth for MCR Buzz children.
  * To add a page: append an entry — redeploy regenerates routes/nav/sitemap.
@@ -217,7 +226,7 @@ function eventHaystack(event: Event): string {
     event.description ?? "",
     event.category ?? "",
     event.venue_name ?? "",
-    ...event.tags,
+    ...(event.tags ?? []),
   ]
     .join("\n")
     .toLowerCase();
@@ -229,14 +238,24 @@ export function eventMatchesMcrBuzzSection(
 ): boolean {
   if (!isLocalMcrBuzzSource(event.source)) return false;
 
+  // Uni calendars + RNCM always list under Student.
+  if (section.id === "student" && event.source && STUDENT_SOURCES.has(event.source)) {
+    return true;
+  }
+
   // Explicit section markers from ingest / organisers
-  const tags = event.tags.map((tag) => tag.toLowerCase());
+  const tags = (event.tags ?? []).map((tag) => tag.toLowerCase());
   if (
     tags.includes(`mcr-buzz:${section.id}`) ||
     tags.includes(section.id) ||
     tags.includes(section.slug) ||
     tags.includes(section.label.toLowerCase())
   ) {
+    return true;
+  }
+
+  // Exact category match (e.g. submit form "Food & Drink")
+  if ((event.category ?? "").trim().toLowerCase() === section.label.toLowerCase()) {
     return true;
   }
 
