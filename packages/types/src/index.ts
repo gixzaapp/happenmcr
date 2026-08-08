@@ -43,6 +43,17 @@ export interface CategoryEventsResponse {
 }
 
 export {
+  EVENT_CATEGORIES,
+  listEventCategories,
+  listSubmitEventCategories,
+  getEventCategory,
+  isValidEventCategory,
+  resolveEventCategoryLabel,
+  type EventCategoryDefinition,
+  type ResolvedEventCategory,
+} from "./categories";
+
+export {
   SLUG_STOPWORDS,
   EVENT_ID_PATTERN,
   slugify,

@@ -9,7 +9,7 @@ import { categoryMatchesSlug, slugifyCategory } from "@happenmcr/types";
 import { prisma } from "../db.js";
 import { getDayRange, getTodayRange, getWeekendRange } from "../lib/dates.js";
 import { toEventDto } from "../lib/mappers.js";
-import { eventMatchesQuery } from "../lib/search.js";
+import { eventMatchesQuery, isExcludedFromMcrBuzz, isMcrBuzzQuery } from "../lib/search.js";
 
 const router: ExpressRouter = Router();
 
@@ -89,7 +89,11 @@ router.get("/search", async (req, res) => {
     }
 
     const events = await listEvents();
-    const data = events.filter((event) => eventMatchesQuery(event, q));
+    const data = events.filter((event) => {
+      if (!eventMatchesQuery(event, q)) return false;
+      if (isMcrBuzzQuery(q) && isExcludedFromMcrBuzz(event)) return false;
+      return true;
+    });
     const body: ApiResponse<EventDto[]> = { data };
     res.json(body);
   } catch (error) {

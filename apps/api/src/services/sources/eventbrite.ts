@@ -5,6 +5,7 @@ const DEFAULT_LOCATION = "Manchester, UK";
 const DEFAULT_WITHIN = "40km";
 const MAX_PAGES = 5;
 
+
 type EventbriteText = {
   text?: string | null;
   html?: string | null;
@@ -89,10 +90,23 @@ function buildVenueAddress(venue?: EventbriteVenue | null): string | null {
 
 /** Map an Eventbrite event payload onto the aggregator's loose RawEventInput. */
 export function mapEventbriteEvent(event: EventbriteEvent): RawEventInput {
-  const tags = [
-    event.category?.short_name ?? event.category?.name,
-    event.subcategory?.short_name ?? event.subcategory?.name,
-  ].filter((tag): tag is string => Boolean(tag));
+  const categoryLabel =
+    event.category?.short_name ?? event.category?.name ?? null;
+  const subcategoryLabel =
+    event.subcategory?.short_name ?? event.subcategory?.name ?? null;
+
+  const tags = [categoryLabel, subcategoryLabel].filter(
+    (tag): tag is string => Boolean(tag),
+  );
+
+  const blob = `${categoryLabel ?? ""} ${subcategoryLabel ?? ""} ${event.name?.text ?? ""}`.toLowerCase();
+  if (
+    /\bcharity\b|\bcauses?\b|\bfundraiser\b|\bfundraising\b|\bvolunteer\b/.test(
+      blob,
+    )
+  ) {
+    tags.push("charity");
+  }
 
   return {
     title: event.name?.text,
@@ -103,7 +117,7 @@ export function mapEventbriteEvent(event: EventbriteEvent): RawEventInput {
     venue_address: buildVenueAddress(event.venue),
     lat: event.venue?.address?.latitude,
     lon: event.venue?.address?.longitude,
-    category: event.category?.short_name ?? event.category?.name,
+    category: categoryLabel,
     tags,
     source: "eventbrite",
     source_url: event.url,
@@ -195,6 +209,7 @@ async function fetchOrganizationPages(
 /**
  * Fetch Manchester (or configured) events from Eventbrite.
  * No-ops when EVENTBRITE_API_TOKEN is missing.
+ * Note: MCR Buzz search filters these out client/API-side for a more local feel.
  */
 export async function fetchEventbriteEvents(): Promise<RawEventInput[]> {
   const token = getToken();

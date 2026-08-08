@@ -5,7 +5,13 @@ import { albertHallScraper } from "./venues/albert-hall.js";
 import { aoArenaScraper } from "./venues/ao-arena.js";
 import { bandOnTheWallScraper } from "./venues/band-on-the-wall.js";
 import { coopLiveScraper } from "./venues/coop-live.js";
+import { manchesterCityCouncilScraper } from "./venues/manchester-city-council.js";
+import { manchesterMetScraper } from "./venues/manchester-met.js";
 import { o2RitzScraper } from "./venues/o2-ritz.js";
+import { rncmScraper } from "./venues/rncm.js";
+import { universityOfGreaterManchesterScraper } from "./venues/university-of-greater-manchester.js";
+import { universityOfManchesterScraper } from "./venues/university-of-manchester.js";
+import { universityOfSalfordScraper } from "./venues/university-of-salford.js";
 
 /**
  * Enabled venue scrapers.
@@ -17,6 +23,12 @@ export const venueScrapers: ScraperDefinition[] = [
   bandOnTheWallScraper,
   o2RitzScraper,
   albertHallScraper,
+  manchesterCityCouncilScraper,
+  universityOfManchesterScraper,
+  manchesterMetScraper,
+  universityOfSalfordScraper,
+  universityOfGreaterManchesterScraper,
+  rncmScraper,
 ];
 
 export async function runVenueScrapers(): Promise<RawEventInput[]> {

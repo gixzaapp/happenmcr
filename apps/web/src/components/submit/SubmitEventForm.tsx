@@ -1,5 +1,6 @@
 "use client";
 
+import { listSubmitEventCategories } from "@happenmcr/types";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -16,6 +17,7 @@ type FormState = {
   startTime: string;
   venueName: string;
   description: string;
+  category: string;
   pricing: Pricing;
   ticketUrl: string;
   contactEmail: string;
@@ -27,11 +29,14 @@ const EMPTY: FormState = {
   startTime: "",
   venueName: "",
   description: "",
+  category: "",
   pricing: "paid",
   ticketUrl: "",
   contactEmail: "",
   website: "",
 };
+
+const CATEGORY_OPTIONS = listSubmitEventCategories();
 
 const MAX_PROMO_BYTES = 5 * 1024 * 1024;
 const ALLOWED_PROMO_TYPES = new Set([
@@ -114,6 +119,14 @@ export function SubmitEventForm() {
     event.preventDefault();
     setStatus({ type: "loading" });
 
+    if (!form.category) {
+      setStatus({
+        type: "error",
+        message: "Please choose a category.",
+      });
+      return;
+    }
+
     const isFree = form.pricing === "free";
     const payload = new FormData();
     payload.set("title", form.title);
@@ -123,6 +136,7 @@ export function SubmitEventForm() {
     );
     payload.set("venueName", form.venueName);
     payload.set("description", form.description);
+    payload.set("category", form.category);
     payload.set("isFree", String(isFree));
     payload.set("ticketUrl", form.ticketUrl);
     payload.set("contactEmail", form.contactEmail);
@@ -187,6 +201,33 @@ export function SubmitEventForm() {
           className={fieldClass}
           placeholder="e.g. Friday Night Jazz at Band on the Wall"
         />
+      </div>
+
+      <div>
+        <label
+          htmlFor="event-category"
+          className="mb-2 block text-sm font-semibold text-industrial-black"
+        >
+          Category <span className="text-primary">*</span>
+        </label>
+        <select
+          id="event-category"
+          name="category"
+          required
+          value={form.category}
+          disabled={disabled}
+          onChange={(e) => update("category", e.target.value)}
+          className={fieldClass}
+        >
+          <option value="" disabled>
+            Select a category
+          </option>
+          {CATEGORY_OPTIONS.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>

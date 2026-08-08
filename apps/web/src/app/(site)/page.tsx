@@ -8,6 +8,11 @@ import {
 import { JsonLd } from "@/components/seo";
 import { getAllEvents, getTodayEvents, pickTrending } from "@/lib/api";
 import { buildLocalBusinessJsonLd, buildOrganizationJsonLd } from "@/lib/jsonld";
+import {
+  filterMcrBuzzEvents,
+  getMcrBuzzSection,
+  mcrBuzzPath,
+} from "@/lib/mcr-buzz";
 import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import {
   buildPageMetadata,
@@ -33,7 +38,7 @@ export const metadata = buildPageMetadata({
 const VIBE_IMAGES = {
   gigs: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
   nightlife:
-    "https://images.unsplash.com/photo-1571266028247-e6822582965d?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=80",
   workshops:
     "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=80",
   student:
@@ -86,7 +91,10 @@ export default async function HomePage() {
     countForSlug(allEvents, "arts-and-culture") +
     countForSlug(allEvents, "arts") +
     countForQuery(allEvents, "workshop");
-  const studentCount = countForQuery(allEvents, "student");
+  const studentSection = getMcrBuzzSection("student");
+  const studentCount = studentSection
+    ? filterMcrBuzzEvents(allEvents, studentSection).length
+    : 0;
 
   const vibes: VibeCard[] = [
     {
@@ -108,7 +116,9 @@ export default async function HomePage() {
       image: VIBE_IMAGES.workshops,
     },
     {
-      href: "/search?q=student",
+      href: studentSection
+        ? mcrBuzzPath(studentSection.slug)
+        : "/mcr-buzz",
       label: "STUDENT",
       countLabel: `${Math.max(studentCount, 1)}+ Offers`,
       image: VIBE_IMAGES.student,

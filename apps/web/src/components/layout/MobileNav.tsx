@@ -10,7 +10,7 @@ import {
   type FormEvent,
 } from "react";
 import { useNavSearchQuery } from "@/components/search/useNavSearchQuery";
-import { primaryNav } from "@/lib/nav";
+import { mcrBuzzNav, primaryNav } from "@/lib/nav";
 
 function MobileSearchField({ onSubmitted }: { onSubmitted: () => void }) {
   const router = useRouter();
@@ -50,10 +50,13 @@ function MobileSearchField({ onSubmitted }: { onSubmitted: () => void }) {
 export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [buzzOpen, setBuzzOpen] = useState(false);
   const panelId = useId();
+  const buzzId = useId();
 
   useEffect(() => {
     setOpen(false);
+    setBuzzOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -109,7 +112,7 @@ export function MobileNav() {
           {primaryNav.map((item) => {
             const active = pathname === item.href;
             return (
-              <li key={item.href}>
+              <li key={`${item.href}-${item.label}`}>
                 <Link
                   href={item.href}
                   className={`block rounded-lg px-3 py-3 font-display text-lg font-semibold transition ${
@@ -124,6 +127,41 @@ export function MobileNav() {
               </li>
             );
           })}
+          <li>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between rounded-lg px-3 py-3 font-display text-lg font-semibold text-industrial-black hover:bg-surface-container-low"
+              aria-expanded={buzzOpen}
+              aria-controls={buzzId}
+              onClick={() => setBuzzOpen((value) => !value)}
+            >
+              {mcrBuzzNav.label}
+              <span
+                className={`material-symbols-outlined transition ${
+                  buzzOpen ? "rotate-180" : ""
+                }`}
+                aria-hidden
+              >
+                expand_more
+              </span>
+            </button>
+            <ul
+              id={buzzId}
+              hidden={!buzzOpen}
+              className="mb-1 ml-2 border-l border-industrial-black/10 pl-3"
+            >
+              {mcrBuzzNav.children.map((child) => (
+                <li key={child.href}>
+                  <Link
+                    href={child.href}
+                    className="block rounded-lg px-3 py-2.5 font-display text-base font-semibold text-secondary hover:bg-surface-container-low hover:text-industrial-black"
+                  >
+                    {child.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </li>
         </ul>
 
         <Suspense fallback={null}>

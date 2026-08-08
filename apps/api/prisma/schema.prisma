@@ -70,6 +70,7 @@ model EventSubmission {
   startTime           DateTime  @map("start_time")
   venueName           String    @map("venue_name")
   description         String
+  category            String   @default("Other")
   isFree              Boolean   @default(false) @map("is_free")
   ticketUrl           String?   @map("ticket_url")
   promoImageKey       String?   @map("promo_image_key")

@@ -3,6 +3,7 @@ import { buildEventPath, buildVenuePath } from "@happenmcr/types";
 import { getAllEvents, listCategories } from "@/lib/api";
 import { getSiteUrl } from "@/lib/config";
 import { londonDateHorizon, londonYmd } from "@/lib/format";
+import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
 
 /** Regenerate the sitemap once per day. */
@@ -67,12 +68,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: absoluteUrl("/mcr-buzz"),
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.75,
+    },
+    {
       url: absoluteUrl("/privacy"),
       lastModified: now,
       changeFrequency: "yearly",
       priority: 0.2,
     },
   ];
+
+  const mcrBuzzPages: MetadataRoute.Sitemap = listMcrBuzzSections().map(
+    (section) => ({
+      url: absoluteUrl(mcrBuzzPath(section.slug)),
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    }),
+  );
 
   const eventPages: MetadataRoute.Sitemap = events.map((event) => ({
     url: absoluteUrl(buildEventPath(event)),
@@ -110,6 +126,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const byUrl = new Map<string, MetadataRoute.Sitemap[number]>();
   for (const entry of [
     ...staticPages,
+    ...mcrBuzzPages,
     ...eventPages,
     ...venuePages,
     ...categoryPages,

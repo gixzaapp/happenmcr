@@ -1,5 +1,6 @@
 import type { Event, EventSubmission } from "@prisma/client";
 import { prisma } from "../../db.js";
+import { resolveCampusVenueFromLinks } from "../../lib/campus-venue.js";
 import { notifyOrganiserOutcome } from "./organiser-notify.js";
 
 export type ReviewResult = {
@@ -41,12 +42,19 @@ export async function approveSubmission(
       );
     }
 
+    const campus = resolveCampusVenueFromLinks({
+      ticketUrl: submission.ticketUrl,
+      sourceUrl: submission.ticketUrl,
+    });
+
     const event = await tx.event.create({
       data: {
         title: submission.title,
         description: submission.description,
         startTime: submission.startTime,
-        venueName: submission.venueName,
+        venueName: campus?.venueName ?? submission.venueName,
+        venueAddress: campus?.venueAddress ?? null,
+        category: submission.category,
         ticketUrl: submission.ticketUrl,
         imageUrl: submission.promoImageUrl,
         isFree: submission.isFree,

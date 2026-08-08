@@ -6,6 +6,7 @@ export type SubmissionNotifyInput = {
   startTime: Date;
   venueName: string;
   description: string;
+  category: string;
   isFree: boolean;
   ticketUrl: string | null;
   promoImageUrl: string | null;
@@ -74,6 +75,7 @@ export async function notifyEventSubmission(
 Title: ${input.title}
 When: ${when}
 Venue: ${input.venueName}
+Category: ${input.category}
 Pricing: ${pricingLabel}
 ${urlLine}
 ${imageLine}
@@ -89,6 +91,7 @@ ${input.description}
   <p><strong>Title:</strong> ${escapeHtml(input.title)}</p>
   <p><strong>When:</strong> ${escapeHtml(when)}</p>
   <p><strong>Venue:</strong> ${escapeHtml(input.venueName)}</p>
+  <p><strong>Category:</strong> ${escapeHtml(input.category)}</p>
   <p><strong>Pricing:</strong> ${escapeHtml(pricingLabel)}</p>
   <p><strong>${escapeHtml(urlLabel)}:</strong> ${
     input.ticketUrl

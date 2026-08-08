@@ -19,6 +19,7 @@ const result = await notifyEventSubmission({
   startTime: new Date(Date.now() + 86_400_000),
   venueName: "Test Venue, Manchester",
   description: "If you received this, EVENT_SUBMISSION_TO + Resend are working.",
+  category: "Other",
   isFree: true,
   ticketUrl: "https://happenmcr.com",
   promoImageUrl: null,

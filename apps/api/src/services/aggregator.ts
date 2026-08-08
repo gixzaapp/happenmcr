@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../db.js";
+import { resolveCampusVenueFromLinks } from "../lib/campus-venue.js";
 import { fetchEventbriteEvents } from "./sources/eventbrite.js";
 import { fetchMeetupEvents } from "./sources/meetup.js";
 import { fetchSkiddleEvents } from "./sources/skiddle.js";
@@ -182,21 +183,39 @@ export function normaliseEvent(raw: RawEventInput): NormalisedEvent | null {
     asBoolean(raw.free) ??
     (asNumber(raw.price) === 0 ? true : false);
 
+  const sourceUrl = firstString(raw.source_url, raw.sourceUrl, raw.url);
+  const ticketUrl = firstString(raw.ticket_url, raw.ticketUrl, raw.tickets);
+  let venueName = firstString(raw.venue_name, raw.venueName, raw.venue);
+  let venueAddress = firstString(
+    raw.venue_address,
+    raw.venueAddress,
+    raw.address,
+  );
+
+  const campus = resolveCampusVenueFromLinks(
+    { sourceUrl, ticketUrl, url: sourceUrl },
+    venueAddress,
+  );
+  if (campus) {
+    venueName = campus.venueName;
+    venueAddress = campus.venueAddress;
+  }
+
   return {
     title,
     description: firstString(raw.description),
     startTime,
     endTime: firstDate(raw.end_time, raw.endTime, raw.end),
-    venueName: firstString(raw.venue_name, raw.venueName, raw.venue),
-    venueAddress: firstString(raw.venue_address, raw.venueAddress, raw.address),
+    venueName,
+    venueAddress,
     lat: firstNumber(raw.lat, raw.latitude),
     lon: firstNumber(raw.lon, raw.lng, raw.longitude),
     category: firstString(raw.category),
     tags: asStringArray(raw.tags),
     source,
-    sourceUrl: firstString(raw.source_url, raw.sourceUrl, raw.url),
+    sourceUrl,
     imageUrl: firstString(raw.image_url, raw.imageUrl, raw.image),
-    ticketUrl: firstString(raw.ticket_url, raw.ticketUrl, raw.tickets),
+    ticketUrl,
     isFree,
   };
 }

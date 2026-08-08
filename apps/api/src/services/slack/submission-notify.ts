@@ -41,6 +41,7 @@ export function buildSubmissionBlocks(
   const fields = [
     { type: "mrkdwn", text: `*When*\n${when}` },
     { type: "mrkdwn", text: `*Venue*\n${submission.venueName}` },
+    { type: "mrkdwn", text: `*Category*\n${submission.category}` },
     { type: "mrkdwn", text: `*Pricing*\n${pricing}` },
     { type: "mrkdwn", text: `*Contact*\n${submission.contactEmail}` },
   ];

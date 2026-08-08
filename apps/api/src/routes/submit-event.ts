@@ -1,3 +1,4 @@
+import { resolveEventCategoryLabel } from "@happenmcr/types";
 import { Router, type Router as ExpressRouter } from "express";
 import multer from "multer";
 import { prisma } from "../db.js";
@@ -86,6 +87,10 @@ router.post("/", (req, res, next) => {
     const title = trimString(body.title, 200);
     const venueName = trimString(body.venueName, 200);
     const description = trimString(body.description, 5000);
+    const categoryRaw = trimString(body.category, 80);
+    const category = categoryRaw
+      ? resolveEventCategoryLabel(categoryRaw)
+      : null;
     const ticketUrlRaw = trimString(body.ticketUrl, 2000);
     const contactEmail = trimString(body.contactEmail, 254)?.toLowerCase();
     const startTime = parseStartTime(body.startTime);
@@ -105,6 +110,10 @@ router.post("/", (req, res, next) => {
     }
     if (!description) {
       res.status(400).json({ error: "Description is required." });
+      return;
+    }
+    if (!category) {
+      res.status(400).json({ error: "Please choose a category." });
       return;
     }
     if (!contactEmail || !EMAIL_RE.test(contactEmail)) {
@@ -162,6 +171,7 @@ router.post("/", (req, res, next) => {
         startTime,
         venueName,
         description,
+        category,
         isFree,
         ticketUrl,
         promoImageKey,
@@ -179,6 +189,7 @@ router.post("/", (req, res, next) => {
         startTime,
         venueName,
         description,
+        category,
         isFree,
         ticketUrl,
         promoImageUrl,

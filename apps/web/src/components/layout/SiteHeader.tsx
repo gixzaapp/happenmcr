@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, type FormEvent } from "react";
+import { Suspense, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useNavSearchQuery } from "@/components/search/useNavSearchQuery";
-import { primaryNav } from "@/lib/nav";
+import { mcrBuzzNav, primaryNav } from "@/lib/nav";
 import { MobileNav } from "./MobileNav";
 
 function HeaderSearchField() {
@@ -39,6 +39,83 @@ function HeaderSearchField() {
   );
 }
 
+function McrBuzzDropdown() {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        className={`inline-flex items-center gap-1 font-display text-lg font-semibold transition duration-200 ${
+          open
+            ? "text-industrial-black"
+            : "text-secondary hover:text-industrial-black"
+        }`}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {mcrBuzzNav.label}
+        <span
+          className={`material-symbols-outlined text-base transition ${
+            open ? "rotate-180" : ""
+          }`}
+          aria-hidden
+        >
+          expand_more
+        </span>
+      </button>
+
+      <div
+        id={menuId}
+        role="menu"
+        aria-label={mcrBuzzNav.label}
+        className={`absolute left-0 top-full z-50 mt-2 min-w-[12rem] origin-top rounded-lg border border-industrial-black/10 bg-canvas-white py-2 shadow-lg transition ${
+          open
+            ? "pointer-events-auto scale-100 opacity-100"
+            : "pointer-events-none scale-95 opacity-0"
+        }`}
+      >
+        {mcrBuzzNav.children.map((child) => (
+          <Link
+            key={child.href}
+            href={child.href}
+            role="menuitem"
+            className="block px-4 py-2.5 font-display text-base font-semibold text-secondary transition hover:bg-surface-container-low hover:text-industrial-black"
+            onClick={() => setOpen(false)}
+          >
+            {child.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
 
@@ -57,7 +134,7 @@ export function SiteHeader() {
             const active = pathname === item.href;
             return (
               <Link
-                key={item.href}
+                key={`${item.href}-${item.label}`}
                 href={item.href}
                 className={`font-display text-lg font-semibold transition duration-200 ${
                   active ||
@@ -76,6 +153,7 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <McrBuzzDropdown />
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
