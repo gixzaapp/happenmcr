@@ -68,7 +68,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     },
     image: toAbsoluteUrl("/opengraph-image"),
     description:
-      "Discover what's on in Manchester: live music, nightlife, free events, community, and more — updated daily on HappenMCR.",
+      "What's on in Manchester: live music, gigs, nightlife, free events, community workshops, and food & drink — updated daily on HappenMCR.",
     email: "hello@happenmcr.com",
     foundingLocation: {
       "@type": "Place",
@@ -90,10 +90,13 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     },
     knowsAbout: [
       "Manchester events",
-      "Manchester gigs",
+      "live music Manchester",
       "Manchester nightlife",
+      "drum and bass events Manchester",
+      "underground warehouse raves",
+      "cocktail masterclass Manchester",
+      "community garden workshops",
       "Free events in Manchester",
-      "Community events",
     ],
     contactPoint: {
       "@type": "ContactPoint",
@@ -156,10 +159,13 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
     ],
     knowsAbout: [
       "What's on in Manchester",
-      "Manchester live music",
+      "live music Manchester",
       "Manchester nightlife",
+      "drum and bass events Manchester",
+      "underground warehouse raves",
+      "cocktail masterclass Manchester",
+      "community garden workshops",
       "Manchester free events",
-      "Community events Manchester",
     ],
     parentOrganization: {
       "@id": `${siteUrl}/#organization`,
@@ -190,7 +196,7 @@ export function buildBreadcrumbJsonLd(
 
 /**
  * schema.org Event JSON-LD for an event detail page.
- * Image is omitted unless organiser photo display is permitted.
+ * Fills Google's recommended Event fields (image, endDate, offers.price/validFrom).
  */
 export function buildEventJsonLd(event: Event): Record<string, unknown> {
   const pageUrl = eventPageUrl(event);
@@ -238,13 +244,21 @@ export function buildEventJsonLd(event: Event): Record<string, unknown> {
   };
 
   const ticketUrl = event.ticket_url || event.source_url || pageUrl;
-  const offers = {
+  const offers: Record<string, unknown> = {
     "@type": "Offer",
     url: ticketUrl,
     priceCurrency: "GBP",
     availability: "https://schema.org/InStock",
-    ...(event.is_free ? { price: 0 } : {}),
+    validFrom: offerValidFrom(event.start_time),
   };
+  // Free events always expose price 0. Unknown paid ticket prices are omitted
+  // (we don't invent costs).
+  if (event.is_free) {
+    offers.price = 0;
+  }
+
+  const images = eventJsonLdImages(event, showImage);
+  const endDate = eventEndDate(event);
 
   const payload = {
     "@context": "https://schema.org",
@@ -252,11 +266,11 @@ export function buildEventJsonLd(event: Event): Record<string, unknown> {
     name: event.title,
     description: event.description,
     startDate: event.start_time,
-    endDate: event.end_time,
+    endDate,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     url: pageUrl,
-    image: showImage ? event.image_url : null,
+    image: images.length === 1 ? images[0] : images,
     location,
     organizer,
     performer,
@@ -268,6 +282,39 @@ export function buildEventJsonLd(event: Event): Record<string, unknown> {
     "@type": "Event",
     name: event.title,
     startDate: event.start_time,
+    endDate,
     url: pageUrl,
+    image: images,
+    offers,
   }) as Record<string, unknown>;
+}
+
+function absoluteMaybeUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return toAbsoluteUrl(url.startsWith("/") ? url : `/${url}`);
+}
+
+/** Prefer organiser art when allowed; always include a happenmcr.com OG image. */
+function eventJsonLdImages(event: Event, showImage: boolean): string[] {
+  const urls: string[] = [];
+  if (showImage && event.image_url) {
+    urls.push(absoluteMaybeUrl(event.image_url));
+  }
+  urls.push(toAbsoluteUrl(`/og/event/${encodeURIComponent(event.id)}`));
+  return [...new Set(urls)];
+}
+
+/** Google recommends endDate — default to start + 3h when the feed has no end. */
+function eventEndDate(event: Event): string {
+  if (event.end_time) return event.end_time;
+  const start = new Date(event.start_time);
+  if (Number.isNaN(start.getTime())) return event.start_time;
+  return new Date(start.getTime() + 3 * 60 * 60 * 1000).toISOString();
+}
+
+/** Offer availability start — stable estimate when on-sale date is unknown. */
+function offerValidFrom(startTime: string): string {
+  const start = new Date(startTime);
+  if (Number.isNaN(start.getTime())) return startTime;
+  return new Date(start.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
 }

@@ -68,9 +68,9 @@ export function HomeHero({ todayEvents = [] }: HomeHeroProps) {
           </nav>
 
           <p className="mb-stack-md max-w-lg text-body-lg text-canvas-white/80">
-            Your high-performance engine for Manchester city life. From
-            underground warehouse raves to community garden workshops—if it&apos;s
-            happening, it&apos;s here.
+            What&apos;s on in Manchester — live music, nightlife, and more.
+            From underground warehouse raves to community garden workshops, if
+            it&apos;s happening, it&apos;s here.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link

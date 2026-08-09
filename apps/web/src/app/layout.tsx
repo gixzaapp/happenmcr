@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoscript,
+} from "@/components/analytics";
 import { getSiteUrl } from "@/lib/config";
 import {
   DEFAULT_DESCRIPTION,
@@ -71,6 +75,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <head>
+        <GoogleTagManager />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -82,7 +87,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="min-h-screen font-sans">
+        <GoogleTagManagerNoscript />
+        {children}
+      </body>
     </html>
   );
 }

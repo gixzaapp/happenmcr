@@ -16,9 +16,13 @@ export function ChooseVibe({ vibes }: ChooseVibeProps) {
   return (
     <section className="bg-surface-container-low py-stack-lg">
       <div className="mx-auto max-w-site px-grid-margin">
-        <h2 className="mb-stack-md text-center font-display text-3xl font-bold tracking-tight text-industrial-black sm:text-headline-lg">
+        <h2 className="mb-3 text-center font-display text-3xl font-bold tracking-tight text-industrial-black sm:text-headline-lg">
           CHOOSE YOUR VIBE
         </h2>
+        <p className="mx-auto mb-stack-md max-w-2xl text-center text-base text-secondary">
+          Browse live music Manchester gigs, nightlife, workshops, and student
+          events — then jump into today&apos;s listings.
+        </p>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {vibes.map((vibe) => (
             <Link
@@ -28,7 +32,7 @@ export function ChooseVibe({ vibes }: ChooseVibeProps) {
             >
               <Image
                 src={vibe.image}
-                alt=""
+                alt={`${vibe.label} events in Manchester`}
                 fill
                 loading="lazy"
                 sizes="(max-width: 768px) 100vw, 25vw"

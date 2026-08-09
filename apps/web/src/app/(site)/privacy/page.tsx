@@ -63,6 +63,7 @@ const sections = [
     title: "Cookies and analytics",
     body: [
       "We may use essential cookies needed for the site to work, and optional analytics cookies to understand traffic and improve the product.",
+      "When configured, we use Google Tag Manager to load analytics tools such as Google Analytics. Those services may set cookies or similar technologies and process usage data according to Google’s policies.",
       "You can control cookies through your browser settings. Blocking some cookies may affect site features.",
     ],
   },
@@ -119,7 +120,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-4 text-body-md text-secondary">
-          Last updated: 5 August 2026
+          Last updated: 9 August 2026
         </p>
         <p className="mt-4 text-body-md text-secondary">
           This policy applies to{" "}

@@ -4,14 +4,20 @@ import { getSiteUrl } from "./config";
 export const SITE_NAME = "HappenMCR";
 
 export const DEFAULT_DESCRIPTION =
-  "Discover what's on in Manchester: live music, nightlife, free events, community, and more — updated daily on HappenMCR.";
+  "What's on in Manchester: live music, gigs, nightlife, drum and bass, free events, community workshops, and food & drink — updated daily on HappenMCR.";
 
+/** High-intent phrases people search — keep aligned with on-page copy. */
 export const DEFAULT_KEYWORDS = [
   "Manchester events",
   "what's on Manchester",
+  "live music Manchester",
   "Manchester gigs",
   "Manchester nightlife",
+  "drum and bass events Manchester",
   "Manchester free events",
+  "cocktail masterclass Manchester",
+  "community garden workshops",
+  "underground warehouse raves",
   "HappenMCR",
 ] as const;
 

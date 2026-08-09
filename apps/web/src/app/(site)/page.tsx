@@ -2,6 +2,7 @@ import {
   ChooseVibe,
   FeaturedDiscovery,
   HomeHero,
+  HomeSeoIntro,
   Newsletter,
   type VibeCard,
 } from "@/components/home";
@@ -28,7 +29,7 @@ import {
 export const revalidate = REVALIDATE_SECONDS;
 
 export const metadata = buildPageMetadata({
-  title: "HappenMCR | What's On in Manchester — Events, Gigs & Nightlife",
+  title: "HappenMCR | What's On in Manchester — Live Music, Gigs & Nightlife",
   description: DEFAULT_DESCRIPTION,
   path: "/",
   keywords: [...DEFAULT_KEYWORDS],
@@ -132,6 +133,7 @@ export default async function HomePage() {
       <HomeHero todayEvents={todayEvents} />
       <FeaturedDiscovery events={featured} />
       <ChooseVibe vibes={vibes} />
+      <HomeSeoIntro />
       <Newsletter />
     </>
   );

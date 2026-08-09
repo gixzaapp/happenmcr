@@ -55,7 +55,7 @@ export async function generateMetadata({
     count === 0 ? "Find" : count === 1 ? "1" : `${count}`;
 
   const title = `${category.name} events in Manchester`;
-  const description = `${countLabel} ${category.name.toLowerCase()} event${count === 1 ? "" : "s"} in Manchester. Browse listings on HappenMCR.`;
+  const description = `${countLabel} ${category.name.toLowerCase()} event${count === 1 ? "" : "s"} in Manchester. Browse live listings, gigs, and nights out on HappenMCR.`;
 
   return buildPageMetadata({
     title,
@@ -64,7 +64,10 @@ export async function generateMetadata({
     keywords: [
       category.name,
       `${category.name} Manchester`,
+      `${category.name} events Manchester`,
+      "live music Manchester",
       "Manchester events",
+      "what's on Manchester",
       "HappenMCR",
     ],
   });
