@@ -5,7 +5,8 @@ import {
 } from "@/lib/event-media";
 
 export const runtime = "nodejs";
-export const revalidate = 600;
+/** Don't sticky-cache 404s from blocked/missing images across deploys. */
+export const dynamic = "force-dynamic";
 
 type RouteContext = {
   params: { id: string };

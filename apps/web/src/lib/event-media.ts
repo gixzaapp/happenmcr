@@ -17,7 +17,8 @@ export async function fetchResizedEventImage(
   eventId: string,
   variant: EventImageVariant,
 ): Promise<{ body: Buffer; contentType: string } | null> {
-  const event = await getEventById(eventId);
+  // Always read latest image_url — manual overrides must not wait on ISR cache.
+  const event = await getEventById(eventId, { cache: "no-store" });
   if (!event || !canShowEventImage(event.source, event.image_url)) {
     return null;
   }
@@ -28,7 +29,7 @@ export async function fetchResizedEventImage(
       "User-Agent": "HappenMCR-Media/1.0",
       Accept: "image/*",
     },
-    next: { revalidate: 600 },
+    cache: "no-store",
   });
 
   if (!upstream.ok) return null;

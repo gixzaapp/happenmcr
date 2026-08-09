@@ -71,13 +71,18 @@ export function getSearchEvents(query: string): Promise<Event[]> {
   });
 }
 
-export async function getEventById(id: string): Promise<Event | null> {
+export async function getEventById(
+  id: string,
+  options: FetchEventsOptions = {},
+): Promise<Event | null> {
   const url = `${getApiBaseUrl()}/events/${encodeURIComponent(id)}`;
+  const init: RequestInit =
+    options.cache === "no-store"
+      ? { cache: "no-store" }
+      : { next: { revalidate: options.cache ?? REVALIDATE_SECONDS } };
 
   try {
-    const response = await fetch(url, {
-      next: { revalidate: REVALIDATE_SECONDS },
-    });
+    const response = await fetch(url, init);
 
     if (response.status === 404) return null;
 
