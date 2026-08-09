@@ -244,7 +244,7 @@ export function buildEventJsonLd(event: Event): Record<string, unknown> {
   };
 
   const ticketUrl = event.ticket_url || event.source_url || pageUrl;
-  const offers: Record<string, unknown> = {
+  const offers: { [key: string]: JsonLdValue | undefined } = {
     "@type": "Offer",
     url: ticketUrl,
     priceCurrency: "GBP",
