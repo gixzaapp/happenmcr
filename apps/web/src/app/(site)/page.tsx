@@ -19,6 +19,7 @@ import {
   buildPageMetadata,
   DEFAULT_DESCRIPTION,
   DEFAULT_KEYWORDS,
+  HOME_TITLE,
 } from "@/lib/seo";
 import {
   categoryMatchesSlug,
@@ -29,7 +30,7 @@ import {
 export const revalidate = REVALIDATE_SECONDS;
 
 export const metadata = buildPageMetadata({
-  title: "HappenMCR | What's On in Manchester — Live Music, Gigs & Nightlife",
+  title: HOME_TITLE,
   description: DEFAULT_DESCRIPTION,
   path: "/",
   keywords: [...DEFAULT_KEYWORDS],

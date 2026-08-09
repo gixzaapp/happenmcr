@@ -27,7 +27,10 @@ export function EventDetail({ event }: EventDetailProps) {
     ? buildVenuePath(event.venue_name)
     : null;
   const primaryUrl = event.ticket_url || event.source_url;
-  const useSymbolic = shouldUseSymbolicEventImage(event.source);
+  const useSymbolic = shouldUseSymbolicEventImage(
+    event.source,
+    event.image_url,
+  );
   const heroSrc = event.image_url
     ? eventMediaPath(event.id, "hero")
     : null;

@@ -1,22 +1,36 @@
 import type { MetadataRoute } from "next";
-import { buildEventPath, buildVenuePath } from "@happenmcr/types";
+import { buildEventPath, buildVenuePath, type Event } from "@happenmcr/types";
 import { getAllEvents, listCategories } from "@/lib/api";
 import { getSiteUrl } from "@/lib/config";
 import { londonDateHorizon, londonYmd } from "@/lib/format";
 import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
 
-/** Regenerate the sitemap once per day. */
-export const revalidate = 86_400;
+/**
+ * Regenerate sitemap hourly from live API data so <lastmod> tracks content
+ * changes, not a one-off build timestamp.
+ */
+export const revalidate = 3_600;
 
 function absoluteUrl(path: string): string {
   return new URL(path.startsWith("/") ? path : `/${path}`, getSiteUrl()).toString();
 }
 
+/** Latest event start among a set — used as listing-page lastmod signal. */
+function latestEventDate(events: Event[], fallback: Date): Date {
+  let latest = 0;
+  for (const event of events) {
+    const ms = new Date(event.start_time).getTime();
+    if (Number.isFinite(ms) && ms > latest) latest = ms;
+  }
+  return latest > 0 ? new Date(latest) : fallback;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  const generatedAt = new Date();
   const events = await getAllEvents();
   const categories = listCategories(events);
+  const catalogLastMod = latestEventDate(events, generatedAt);
 
   const venueNames = new Set<string>();
   for (const event of events) {
@@ -24,58 +38,67 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     venueNames.add(event.venue_name.trim());
   }
 
+  const todayYmd = londonYmd();
+  const todayEvents = events.filter((event) => {
+    const start = new Date(event.start_time);
+    if (Number.isNaN(start.getTime())) return false;
+    // Approximate "today" for lastmod only — listing pages use API filters.
+    return londonYmd(start) === todayYmd;
+  });
+  const freeEvents = events.filter((event) => event.is_free);
+
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: absoluteUrl("/"),
-      lastModified: now,
+      lastModified: catalogLastMod,
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: absoluteUrl("/events/today"),
-      lastModified: now,
+      lastModified: latestEventDate(todayEvents, generatedAt),
       changeFrequency: "hourly",
       priority: 0.95,
     },
     {
       url: absoluteUrl("/events/weekend"),
-      lastModified: now,
+      lastModified: catalogLastMod,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: absoluteUrl("/events/free"),
-      lastModified: now,
+      lastModified: latestEventDate(freeEvents, generatedAt),
       changeFrequency: "daily",
       priority: 0.85,
     },
     {
       url: absoluteUrl("/community"),
-      lastModified: now,
+      lastModified: generatedAt,
       changeFrequency: "weekly",
       priority: 0.7,
     },
     {
       url: absoluteUrl("/search"),
-      lastModified: now,
+      lastModified: generatedAt,
       changeFrequency: "weekly",
       priority: 0.5,
     },
     {
       url: absoluteUrl("/submit-event"),
-      lastModified: now,
+      lastModified: generatedAt,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: absoluteUrl("/mcr-buzz"),
-      lastModified: now,
+      lastModified: catalogLastMod,
       changeFrequency: "daily",
       priority: 0.75,
     },
     {
       url: absoluteUrl("/privacy"),
-      lastModified: now,
+      lastModified: generatedAt,
       changeFrequency: "yearly",
       priority: 0.2,
     },
@@ -84,32 +107,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const mcrBuzzPages: MetadataRoute.Sitemap = listMcrBuzzSections().map(
     (section) => ({
       url: absoluteUrl(mcrBuzzPath(section.slug)),
-      lastModified: now,
+      lastModified: catalogLastMod,
       changeFrequency: "daily" as const,
       priority: 0.7,
     }),
   );
 
-  const eventPages: MetadataRoute.Sitemap = events.map((event) => ({
-    url: absoluteUrl(buildEventPath(event)),
-    lastModified: new Date(event.start_time),
-    changeFrequency: "weekly",
-    priority: 0.75,
-  }));
+  // Prefer sitemap generation time when the event is still upcoming — reflects
+  // re-ingest / listing presence rather than a stale one-off build stamp.
+  const eventPages: MetadataRoute.Sitemap = events.map((event) => {
+    const start = new Date(event.start_time);
+    const startMs = start.getTime();
+    const lastModified =
+      Number.isFinite(startMs) && startMs > generatedAt.getTime()
+        ? generatedAt
+        : Number.isFinite(startMs)
+          ? start
+          : generatedAt;
+
+    return {
+      url: absoluteUrl(buildEventPath(event)),
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+    };
+  });
 
   const venuePages: MetadataRoute.Sitemap = [...venueNames]
     .sort((a, b) => a.localeCompare(b))
     .map((name) => ({
       url: absoluteUrl(buildVenuePath(name)),
-      lastModified: now,
-      changeFrequency: "weekly",
+      lastModified: catalogLastMod,
+      changeFrequency: "weekly" as const,
       priority: 0.65,
     }));
 
   const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
     url: absoluteUrl(`/category/${category.slug}`),
-    lastModified: now,
-    changeFrequency: "daily",
+    lastModified: catalogLastMod,
+    changeFrequency: "daily" as const,
     priority: 0.7,
   }));
 
@@ -117,9 +153,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     DATE_ISR_HORIZON_DAYS,
   ).map((ymd) => ({
     url: absoluteUrl(`/events/date/${ymd}`),
-    lastModified: now,
-    changeFrequency: "daily",
-    priority: ymd === londonYmd() ? 0.85 : 0.55,
+    lastModified: ymd === todayYmd ? generatedAt : catalogLastMod,
+    changeFrequency: "daily" as const,
+    priority: ymd === todayYmd ? 0.85 : 0.55,
   }));
 
   // Ensure unique URLs (venue slug collisions collapse by path).

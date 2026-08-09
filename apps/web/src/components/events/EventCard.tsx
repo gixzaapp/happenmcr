@@ -50,7 +50,7 @@ export function EventCard({
   id,
 }: EventCardProps) {
   const formattedDate = formatEventDate(date);
-  const useSymbolic = shouldUseSymbolicEventImage(source);
+  const useSymbolic = shouldUseSymbolicEventImage(source, image);
   const TitleTag = titleAs;
   const imageSrc =
     image && id ? eventMediaPath(id, "card") : image || null;

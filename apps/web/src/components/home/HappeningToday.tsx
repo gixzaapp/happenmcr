@@ -153,8 +153,10 @@ export function HappeningToday({ events }: HappeningTodayProps) {
                     }`}
                   >
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded bg-industrial-black">
-                      {shouldUseSymbolicEventImage(event.source) ||
-                      !event.image_url ? (
+                      {shouldUseSymbolicEventImage(
+                        event.source,
+                        event.image_url,
+                      ) || !event.image_url ? (
                         <EventSymbolicPoster
                           title={event.title}
                           className="p-1.5"

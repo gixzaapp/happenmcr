@@ -8,6 +8,7 @@ import { getSiteUrl } from "@/lib/config";
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_KEYWORDS,
+  HOME_TITLE,
   SITE_NAME,
 } from "@/lib/seo";
 import "./globals.css";
@@ -30,10 +31,15 @@ const sans = Inter({
   adjustFontFallback: true,
 });
 
+/**
+ * Site-wide defaults only. Per-page `buildPageMetadata` sets title, description,
+ * OG/Twitter, and a self-referencing canonical — do not set alternates.canonical
+ * here (it would risk collapsing every route onto `/`).
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "HappenMCR | What's On in Manchester — Events, Gigs & Nightlife",
+    default: HOME_TITLE,
     template: `%s | ${SITE_NAME}`,
   },
   description: DEFAULT_DESCRIPTION,
@@ -51,19 +57,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_GB",
     siteName: SITE_NAME,
-    url: "/",
-    title: "HappenMCR | What's On in Manchester — Events, Gigs & Nightlife",
+    title: HOME_TITLE,
     description: DEFAULT_DESCRIPTION,
     images: [{ url: "/opengraph-image", alt: "HappenMCR" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HappenMCR | What's On in Manchester — Events, Gigs & Nightlife",
+    title: HOME_TITLE,
     description: DEFAULT_DESCRIPTION,
     images: ["/opengraph-image"],
-  },
-  alternates: {
-    canonical: "/",
   },
 };
 

@@ -22,7 +22,7 @@ export function ImpactNow({ workshop }: ImpactNowProps) {
   const when = workshop ? formatEventDate(workshop.start_time) : "Date TBC";
   const where = workshop?.venue_name ?? "Salford Depot";
   const useSymbolic = workshop
-    ? shouldUseSymbolicEventImage(workshop.source)
+    ? shouldUseSymbolicEventImage(workshop.source, workshop.image_url)
     : false;
 
   return (

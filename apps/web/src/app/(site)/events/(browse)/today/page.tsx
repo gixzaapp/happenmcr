@@ -5,12 +5,13 @@ import { getTodayEvents } from "@/lib/api";
 import { formatLondonDay } from "@/lib/format";
 import {
   buildBreadcrumbJsonLd,
+  buildEventItemListJsonLd,
   homeBreadcrumb,
 } from "@/lib/jsonld";
 import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import { buildPageMetadata } from "@/lib/seo";
 
-/** ISR: today's listing stays crawlable and near-fresh. */
+/** ISR ≤ 10m — today's listing stays crawlable and near-fresh. */
 export const revalidate = REVALIDATE_SECONDS;
 
 const PATH = "/events/today";
@@ -26,8 +27,8 @@ export async function generateMetadata(): Promise<Metadata> {
         ? "1 event on"
         : `${count} events on`;
 
-  const title = `Events in Manchester Today — ${dayLabel}`;
-  const description = `${countLabel} in Manchester today (${dayLabel}). Concerts, gigs, nightlife, food, and more on HappenMCR.`;
+  const title = `Manchester Events Today — What's On ${dayLabel}`;
+  const description = `Find events in Manchester today (${dayLabel}). ${countLabel} listed — concerts, gigs, nightlife, food, and more on HappenMCR.`;
 
   return buildPageMetadata({
     title,
@@ -37,6 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "Manchester events today",
       "what's on Manchester today",
       "Manchester gigs today",
+      "events in Manchester today",
       "HappenMCR",
     ],
   });
@@ -56,12 +58,19 @@ export default async function EventsTodayPage() {
           { name: "Events today", path: PATH },
         ])}
       />
+      <JsonLd
+        data={buildEventItemListJsonLd(events, {
+          name: `Manchester events today — ${dayLabel}`,
+          path: PATH,
+          description: `${countLabel} on in Manchester today.`,
+        })}
+      />
       <header className="max-w-2xl">
         <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-bee-yellow">
           Today in Manchester
         </p>
         <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-industrial-black sm:text-5xl">
-          Events in Manchester today
+          Manchester events today
         </h1>
         <p className="mt-4 text-base text-secondary sm:text-lg">
           {dayLabel}. {countLabel} listed and updated throughout the day.

@@ -3,6 +3,7 @@ import {
   runAggregation,
   type AggregationResult,
 } from "../services/aggregator.js";
+import { pingGoogleSitemap } from "../services/seo/ping-sitemap.js";
 
 export type IngestionCronStatus = {
   enabled: boolean;
@@ -64,6 +65,14 @@ export async function runScheduledIngestion(
       `[cron] ingestion finished (${trigger}) at ${lastFinishedAt}`,
       result,
     );
+
+    // Nudge Google after successful content updates (rate-limited inside helper).
+    if (result.upserted > 0) {
+      void pingGoogleSitemap().catch(() => {
+        /* logged inside helper */
+      });
+    }
+
     return result;
   } catch (error) {
     lastError = error instanceof Error ? error.message : String(error);

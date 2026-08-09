@@ -9,6 +9,7 @@ export {
   DEFAULT_DESCRIPTION,
   DEFAULT_KEYWORDS,
   DEFAULT_OG_IMAGE_PATH,
+  HOME_TITLE,
   SITE_NAME,
   type PageSeoOptions,
 } from "@/lib/seo";
@@ -23,6 +24,7 @@ export {
 } from "./internalLinks";
 export {
   buildBreadcrumbJsonLd,
+  buildEventItemListJsonLd,
   buildEventJsonLd,
   buildLocalBusinessJsonLd,
   buildOrganizationJsonLd,

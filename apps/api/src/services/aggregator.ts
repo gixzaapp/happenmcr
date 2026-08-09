@@ -227,19 +227,35 @@ async function upsertNormalisedEvent(event: NormalisedEvent): Promise<void> {
   if (source && sourceUrl) {
     const existing = await prisma.event.findFirst({
       where: { source, sourceUrl },
-      select: { id: true },
+      select: { id: true, imageUrl: true },
     });
 
     if (existing) {
+      // Keep manual stock CDN overrides (Pixabay / Unsplash) across re-ingest.
+      const data =
+        existing.imageUrl && isStockImageUrl(existing.imageUrl)
+          ? { ...event, imageUrl: existing.imageUrl }
+          : event;
+
       await prisma.event.update({
         where: { id: existing.id },
-        data: event,
+        data,
       });
       return;
     }
   }
 
   await prisma.event.create({ data: event });
+}
+
+/** Manual stock CDN hosts — preserve these image_url values on upsert. */
+function isStockImageUrl(imageUrl: string): boolean {
+  try {
+    const host = new URL(imageUrl).hostname.toLowerCase();
+    return host === "cdn.pixabay.com" || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
 }
 
 /** Run the full ingestion pipeline: fetch → normalise → upsert. */

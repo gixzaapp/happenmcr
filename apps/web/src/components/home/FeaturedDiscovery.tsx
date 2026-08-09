@@ -27,7 +27,10 @@ export function FeaturedDiscovery({ events = [] }: FeaturedDiscoveryProps) {
     return null;
   }
 
-  const featuredSymbolic = shouldUseSymbolicEventImage(featured.source);
+  const featuredSymbolic = shouldUseSymbolicEventImage(
+    featured.source,
+    featured.image_url,
+  );
 
   return (
     <section className="mx-auto max-w-site px-grid-margin py-stack-lg">
@@ -111,7 +114,10 @@ export function FeaturedDiscovery({ events = [] }: FeaturedDiscoveryProps) {
         <div className="space-y-gutter">
           {sideEvents.map((event, index) => {
             const dark = index === 1;
-            const symbolic = shouldUseSymbolicEventImage(event.source);
+            const symbolic = shouldUseSymbolicEventImage(
+              event.source,
+              event.image_url,
+            );
             return (
               <Link
                 key={event.id}

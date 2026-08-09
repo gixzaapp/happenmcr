@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/seo";
 import { getFreeEvents } from "@/lib/api";
 import {
   buildBreadcrumbJsonLd,
+  buildEventItemListJsonLd,
   homeBreadcrumb,
 } from "@/lib/jsonld";
 import { REVALIDATE_SECONDS } from "@/lib/rendering";
@@ -25,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
         : `${count} free events`;
 
   const title = "Free Events in Manchester";
-  const description = `${countLabel} in Manchester. Markets, music, culture, and more — no ticket required. Updated on HappenMCR.`;
+  const description = `Find free events in Manchester. ${countLabel} listed — markets, music, culture, and more with no ticket required. Updated on HappenMCR.`;
 
   return buildPageMetadata({
     title,
@@ -52,6 +53,13 @@ export default async function EventsFreePage() {
           homeBreadcrumb(),
           { name: "Free events", path: PATH },
         ])}
+      />
+      <JsonLd
+        data={buildEventItemListJsonLd(events, {
+          name: "Free events in Manchester",
+          path: PATH,
+          description: `${countLabel} listed — things to do without buying a ticket.`,
+        })}
       />
       <header className="max-w-2xl">
         <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-bee-yellow">

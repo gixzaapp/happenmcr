@@ -6,6 +6,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 /** CDN hosts seen in production event images (+ marketing Unsplash). */
 const EVENT_IMAGE_HOSTS = [
   "images.unsplash.com",
+  "cdn.pixabay.com",
   "s1.ticketm.net",
   "d31fr2pwly4c4s.cloudfront.net",
   "d1plawd8huk6hh.cloudfront.net",

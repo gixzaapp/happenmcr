@@ -68,7 +68,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     },
     image: toAbsoluteUrl("/opengraph-image"),
     description:
-      "What's on in Manchester: live music, gigs, nightlife, free events, community workshops, and food & drink — updated daily on HappenMCR.",
+      "Find events in Manchester today — live music, gigs, nightlife, free events, community workshops, and food & drink. Updated daily on HappenMCR.",
     email: "hello@happenmcr.com",
     foundingLocation: {
       "@type": "Place",
@@ -194,11 +194,8 @@ export function buildBreadcrumbJsonLd(
   };
 }
 
-/**
- * schema.org Event JSON-LD for an event detail page.
- * Fills Google's recommended Event fields (image, endDate, offers.price/validFrom).
- */
-export function buildEventJsonLd(event: Event): Record<string, unknown> {
+/** Nested Event node (no @context) for detail pages and ItemList items. */
+function buildEventNode(event: Event): { [key: string]: JsonLdValue | undefined } {
   const pageUrl = eventPageUrl(event);
   const showImage = canShowEventImage(event.source, event.image_url);
 
@@ -260,9 +257,9 @@ export function buildEventJsonLd(event: Event): Record<string, unknown> {
   const images = eventJsonLdImages(event, showImage);
   const endDate = eventEndDate(event);
 
-  const payload = {
-    "@context": "https://schema.org",
+  return {
     "@type": "Event",
+    "@id": `${pageUrl}#event`,
     name: event.title,
     description: event.description,
     startDate: event.start_time,
@@ -276,16 +273,77 @@ export function buildEventJsonLd(event: Event): Record<string, unknown> {
     performer,
     offers,
   };
+}
+
+/**
+ * schema.org Event JSON-LD for an event detail page.
+ * Fills Google's recommended Event fields (image, endDate, offers.price/validFrom).
+ */
+export function buildEventJsonLd(event: Event): Record<string, unknown> {
+  const pageUrl = eventPageUrl(event);
+  const node = buildEventNode(event);
+  const payload = {
+    "@context": "https://schema.org",
+    ...node,
+  };
 
   return (prune(payload) ?? {
     "@context": "https://schema.org",
     "@type": "Event",
+    "@id": `${pageUrl}#event`,
     name: event.title,
     startDate: event.start_time,
-    endDate,
+    endDate: eventEndDate(event),
     url: pageUrl,
-    image: images,
-    offers,
+    image: eventJsonLdImages(
+      event,
+      canShowEventImage(event.source, event.image_url),
+    ),
+  }) as Record<string, unknown>;
+}
+
+/**
+ * schema.org ItemList for listing pages — each entry embeds a full Event node
+ * (same shape as event detail JSON-LD, referenced via url / @id).
+ */
+export function buildEventItemListJsonLd(
+  events: Event[],
+  options: { name: string; path: string; description?: string },
+): Record<string, unknown> {
+  const listUrl = toAbsoluteUrl(options.path);
+  const items = events.slice(0, 50).map((event, index) => {
+    const node = prune(buildEventNode(event)) ?? {
+      "@type": "Event",
+      name: event.title,
+      url: eventPageUrl(event),
+      startDate: event.start_time,
+    };
+    return {
+      "@type": "ListItem",
+      position: index + 1,
+      url: eventPageUrl(event),
+      item: node,
+    };
+  });
+
+  const payload = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${listUrl}#itemlist`,
+    name: options.name,
+    description: options.description ?? null,
+    numberOfItems: events.length,
+    itemListOrder: "https://schema.org/ItemListOrderAscending",
+    url: listUrl,
+    itemListElement: items,
+  };
+
+  return (prune(payload) ?? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: options.name,
+    url: listUrl,
+    itemListElement: items,
   }) as Record<string, unknown>;
 }
 
