@@ -157,17 +157,31 @@ export function parseEventPathSegment(
 
 /**
  * True when a category label matches a URL slug (current, alias, or legacy form).
+ * Example: slug `nightlife` matches event.category `Electronic` via curated aliases.
  */
 export function categoryMatchesSlug(category: string, slug: string): boolean {
   const needle = slug.trim().toLowerCase();
-  if (!needle) return false;
-  if (slugifyCategory(category) === needle) return true;
-  if (slugify(category, { removeStopwords: false }) === needle) return true;
+  const label = category.trim();
+  if (!needle || !label) return false;
 
-  // Curated aliases: /category/electronic should match Nightlife events, etc.
-  const curated = getEventCategory(needle) ?? getEventCategory(category);
-  if (!curated) return false;
-  if (curated.id === needle) return true;
-  if (curated.aliases.includes(needle)) return true;
-  return slugifyCategory(curated.label) === needle;
+  const labelSlug = slugifyCategory(label);
+  if (labelSlug === needle) return true;
+  if (slugify(label, { removeStopwords: false }) === needle) return true;
+
+  const fromSlug = getEventCategory(needle);
+  const fromLabel = getEventCategory(label) ?? getEventCategory(labelSlug);
+  if (fromSlug && fromLabel) {
+    return fromSlug.id === fromLabel.id;
+  }
+
+  // Curated URL (`nightlife`) vs raw scraper label that aliases into it (`Electronic`).
+  if (fromSlug) {
+    const raw = label.toLowerCase();
+    if (fromSlug.aliases.includes(raw) || fromSlug.aliases.includes(labelSlug)) {
+      return true;
+    }
+    if (fromSlug.label.toLowerCase() === raw) return true;
+  }
+
+  return false;
 }

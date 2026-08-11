@@ -5,7 +5,7 @@ import type {
   CategoryEventsResponse,
   Event as EventDto,
 } from "@happenmcr/types";
-import { categoryMatchesSlug, slugifyCategory } from "@happenmcr/types";
+import { categoryMatchesSlug, getEventCategory, slugifyCategory } from "@happenmcr/types";
 import { prisma } from "../db.js";
 import { getDayRange, getTodayRange, getWeekendRange } from "../lib/dates.js";
 import { toEventDto } from "../lib/mappers.js";
@@ -162,9 +162,13 @@ router.get("/category/:slug", async (req, res) => {
       return;
     }
 
+    const curated = getEventCategory(slug) ?? getEventCategory(categoryName);
     const body: CategoryEventsResponse = {
       data,
-      category: { slug: slugifyCategory(categoryName), name: categoryName },
+      category: {
+        slug: curated?.id ?? slugifyCategory(categoryName),
+        name: curated?.label ?? categoryName,
+      },
     };
     res.json(body);
   } catch (error) {
