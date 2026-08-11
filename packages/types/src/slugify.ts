@@ -1,4 +1,6 @@
 /** Common English stopwords removed from SEO slugs. */
+import { getEventCategory } from "./categories";
+
 export const SLUG_STOPWORDS = new Set([
   "a",
   "an",
@@ -154,11 +156,18 @@ export function parseEventPathSegment(
 }
 
 /**
- * True when a category label matches a URL slug (current or legacy no-stopword form).
+ * True when a category label matches a URL slug (current, alias, or legacy form).
  */
 export function categoryMatchesSlug(category: string, slug: string): boolean {
   const needle = slug.trim().toLowerCase();
   if (!needle) return false;
   if (slugifyCategory(category) === needle) return true;
-  return slugify(category, { removeStopwords: false }) === needle;
+  if (slugify(category, { removeStopwords: false }) === needle) return true;
+
+  // Curated aliases: /category/electronic should match Nightlife events, etc.
+  const curated = getEventCategory(needle) ?? getEventCategory(category);
+  if (!curated) return false;
+  if (curated.id === needle) return true;
+  if (curated.aliases.includes(needle)) return true;
+  return slugifyCategory(curated.label) === needle;
 }

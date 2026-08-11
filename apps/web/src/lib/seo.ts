@@ -70,13 +70,18 @@ export function truncateSeoText(text: string, max = 160): string {
   return `${cleaned.slice(0, max - 1).trimEnd()}…`;
 }
 
-/** Absolute canonical URL — query/hash stripped to avoid duplicate signals. */
+/** Absolute canonical URL — HTTPS apex, no query/hash, no trailing slash (except `/`). */
 export function canonicalUrlForPath(path: string): string {
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  const url = new URL(normalized, getSiteUrl());
-  url.search = "";
-  url.hash = "";
-  return url.toString();
+  const site = getSiteUrl().replace(/\/$/, "");
+  const pathname = (path.startsWith("/") ? path : `/${path}`).split(/[?#]/)[0] || "/";
+  const trimmed =
+    pathname.length > 1 ? pathname.replace(/\/+$/, "") || "/" : "/";
+
+  if (trimmed === "/") {
+    return `${site}/`;
+  }
+
+  return `${site}${trimmed}`;
 }
 
 /**

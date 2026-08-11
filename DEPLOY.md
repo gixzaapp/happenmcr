@@ -15,6 +15,22 @@ Web SSR must call the API on loopback: `API_URL=http://127.0.0.1:4000`.
 
 ---
 
+## Host redirects (fix GSC “Duplicate without user-selected canonical”)
+
+Nginx must send **www** and **http** to `https://happenmcr.com` in **one hop**.  
+See [`deploy/nginx-host-redirects.conf.example`](deploy/nginx-host-redirects.conf.example).
+
+Quick test:
+
+```bash
+curl -sI --max-redirs 0 http://www.happenmcr.com/ | grep -iE 'HTTP/|location:'
+curl -sI --max-redirs 0 https://www.happenmcr.com/ | grep -iE 'HTTP/|location:'
+```
+
+Both should `Location: https://happenmcr.com/` (not `https://www.happenmcr.com/`).
+
+---
+
 ## Full redeploy (API + web)
 
 Do **not** `pm2 stop` the web app while building — that causes nginx **502**. Build first, then restart.

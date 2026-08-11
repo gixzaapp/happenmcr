@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { EventList } from "@/components/events";
 import {
   categoryExploreLinks,
@@ -9,7 +9,8 @@ import {
 import {
   getAllEvents,
   getCategoryEvents,
-  listCategories,
+  isIndexableCategory,
+  listIndexableCategories,
 } from "@/lib/api";
 import {
   buildBreadcrumbJsonLd,
@@ -17,11 +18,12 @@ import {
 } from "@/lib/jsonld";
 import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import { buildPageMetadata } from "@/lib/seo";
+import { getEventCategory } from "@happenmcr/types";
 
 /** ISR: category indexes regenerated every 10 minutes. */
 export const revalidate = REVALIDATE_SECONDS;
 
-/** Unknown/legacy slugs can still resolve on demand. */
+/** Unknown/legacy slugs can still resolve on demand (but stay noindex). */
 export const dynamicParams = true;
 
 type CategoryPageProps = {
@@ -30,7 +32,9 @@ type CategoryPageProps = {
 
 export async function generateStaticParams() {
   const events = await getAllEvents();
-  return listCategories(events).map((category) => ({ slug: category.slug }));
+  return listIndexableCategories(events).map((category) => ({
+    slug: category.slug,
+  }));
 }
 
 export async function generateMetadata({
@@ -49,22 +53,27 @@ export async function generateMetadata({
   }
 
   const { category, events } = result;
-  const path = `/category/${category.slug}`;
+  const curated = getEventCategory(params.slug) ?? getEventCategory(category.slug);
+  const canonicalSlug = curated?.id ?? category.slug;
+  const path = `/category/${canonicalSlug}`;
   const count = events.length;
   const countLabel =
     count === 0 ? "Find" : count === 1 ? "1" : `${count}`;
+  const index = isIndexableCategory(canonicalSlug, count);
 
-  const title = `${category.name} events in Manchester`;
-  const description = `${countLabel} ${category.name.toLowerCase()} event${count === 1 ? "" : "s"} in Manchester. Browse live listings, gigs, and nights out on HappenMCR.`;
+  const title = `${(curated?.label ?? category.name)} events in Manchester`;
+  const description = `${countLabel} ${(curated?.label ?? category.name).toLowerCase()} event${count === 1 ? "" : "s"} in Manchester. Browse live listings, gigs, and nights out on HappenMCR.`;
 
   return buildPageMetadata({
     title,
     description,
     path,
+    index,
+    follow: true,
     keywords: [
-      category.name,
-      `${category.name} Manchester`,
-      `${category.name} events Manchester`,
+      curated?.label ?? category.name,
+      `${curated?.label ?? category.name} Manchester`,
+      `${curated?.label ?? category.name} events Manchester`,
       "live music Manchester",
       "Manchester events",
       "what's on Manchester",
@@ -74,6 +83,11 @@ export async function generateMetadata({
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
+  const curated = getEventCategory(params.slug);
+  if (curated && curated.id !== params.slug && curated.id !== "other") {
+    permanentRedirect(`/category/${curated.id}`);
+  }
+
   const result = await getCategoryEvents(params.slug);
 
   if (!result) {

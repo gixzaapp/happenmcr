@@ -7,6 +7,11 @@ export type EventCategoryDefinition = {
   id: string;
   /** Label stored on Event.category and shown in the UI. */
   label: string;
+  /**
+   * Legacy / scraper URL slugs that should map to this category
+   * (e.g. `electronic` → Nightlife).
+   */
+  aliases?: string[];
   /** Include in the submit-event dropdown. Default true. */
   showInSubmit?: boolean;
   /** Sort order ascending. Default: registry order. */
@@ -15,9 +20,17 @@ export type EventCategoryDefinition = {
 
 const EVENT_CATEGORY_DEFS: EventCategoryDefinition[] = [
   { id: "live-music", label: "Live Music" },
-  { id: "nightlife", label: "Nightlife" },
+  {
+    id: "nightlife",
+    label: "Nightlife",
+    aliases: ["electronic", "club", "clubs", "dance", "rave"],
+  },
   { id: "comedy", label: "Comedy" },
-  { id: "arts-culture", label: "Arts & Culture" },
+  {
+    id: "arts-culture",
+    label: "Arts & Culture",
+    aliases: ["arts-and-culture", "arts", "culture"],
+  },
   { id: "theatre", label: "Theatre" },
   { id: "family", label: "Family" },
   { id: "festivals", label: "Festivals" },
@@ -34,6 +47,7 @@ const EVENT_CATEGORY_DEFS: EventCategoryDefinition[] = [
 export type ResolvedEventCategory = EventCategoryDefinition & {
   showInSubmit: boolean;
   order: number;
+  aliases: string[];
 };
 
 function resolveCategory(
@@ -44,6 +58,7 @@ function resolveCategory(
     ...def,
     id: def.id.trim().toLowerCase(),
     label: def.label.trim(),
+    aliases: (def.aliases ?? []).map((alias) => alias.trim().toLowerCase()),
     showInSubmit: def.showInSubmit !== false,
     order: def.order ?? index,
   };
@@ -57,6 +72,12 @@ const byId = new Map(EVENT_CATEGORIES.map((c) => [c.id, c]));
 const byLabel = new Map(
   EVENT_CATEGORIES.map((c) => [c.label.toLowerCase(), c]),
 );
+const byAlias = new Map<string, ResolvedEventCategory>();
+for (const category of EVENT_CATEGORIES) {
+  for (const alias of category.aliases) {
+    byAlias.set(alias, category);
+  }
+}
 
 /** All categories in display order. */
 export function listEventCategories(): ResolvedEventCategory[] {
@@ -73,7 +94,7 @@ export function getEventCategory(
 ): ResolvedEventCategory | null {
   const key = idOrLabel.trim().toLowerCase();
   if (!key) return null;
-  return byId.get(key) ?? byLabel.get(key) ?? null;
+  return byId.get(key) ?? byLabel.get(key) ?? byAlias.get(key) ?? null;
 }
 
 export function isValidEventCategory(idOrLabel: string): boolean {

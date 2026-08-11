@@ -1,0 +1,77 @@
+# HappenMCR nginx — host hygiene (Contabo)
+
+Paste into the server block(s) that handle `happenmcr.com` / `www.happenmcr.com`.
+Goal: **one hop** from any http/www variant → `https://happenmcr.com$request_uri`.
+
+Today Google still sees chains like:
+
+`http://www.happenmcr.com/` → 301 `https://www.happenmcr.com/` → 308 `https://happenmcr.com/`
+
+That shows up in Search Console as **Duplicate without user-selected canonical**.
+
+## Recommended server blocks
+
+```nginx
+# Catch plain HTTP for both apex and www → HTTPS apex (one hop)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name happenmcr.com www.happenmcr.com;
+    return 301 https://happenmcr.com$request_uri;
+}
+
+# HTTPS www → HTTPS apex (one hop)
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name www.happenmcr.com;
+
+    # ssl_certificate / ssl_certificate_key — same certs as apex (SAN must include www)
+
+    return 301 https://happenmcr.com$request_uri;
+}
+
+# Canonical HTTPS apex
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name happenmcr.com;
+
+    # ssl_certificate / ssl_certificate_key …
+
+    # Existing proxy_pass to Next on :3000 and /api → :4000 stay here.
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:4000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+## Apply on Contabo
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Verify ONE hop each
+curl -sI --max-redirs 0 http://www.happenmcr.com/ | grep -iE 'HTTP/|location:'
+curl -sI --max-redirs 0 https://www.happenmcr.com/ | grep -iE 'HTTP/|location:'
+curl -sI --max-redirs 0 http://happenmcr.com/ | grep -iE 'HTTP/|location:'
+```
+
+Expected: each returns `301` (or `308`) with `Location: https://happenmcr.com/` — never `https://www.…`.

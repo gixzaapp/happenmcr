@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { buildEventPath, buildVenuePath, type Event } from "@happenmcr/types";
-import { getAllEvents, listCategories } from "@/lib/api";
+import { buildEventPath, type Event } from "@happenmcr/types";
+import { getAllEvents, listIndexableCategories, listIndexableVenues } from "@/lib/api";
 import { getSiteUrl } from "@/lib/config";
 import { londonDateHorizon, londonYmd } from "@/lib/format";
 import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
@@ -29,20 +29,14 @@ function latestEventDate(events: Event[], fallback: Date): Date {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const generatedAt = new Date();
   const events = await getAllEvents();
-  const categories = listCategories(events);
+  const categories = listIndexableCategories(events);
+  const venues = listIndexableVenues(events);
   const catalogLastMod = latestEventDate(events, generatedAt);
-
-  const venueNames = new Set<string>();
-  for (const event of events) {
-    if (!event.venue_name?.trim()) continue;
-    venueNames.add(event.venue_name.trim());
-  }
 
   const todayYmd = londonYmd();
   const todayEvents = events.filter((event) => {
     const start = new Date(event.start_time);
     if (Number.isNaN(start.getTime())) return false;
-    // Approximate "today" for lastmod only — listing pages use API filters.
     return londonYmd(start) === todayYmd;
   });
   const freeEvents = events.filter((event) => event.is_free);
@@ -78,12 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
-    {
-      url: absoluteUrl("/search"),
-      lastModified: generatedAt,
-      changeFrequency: "weekly",
-      priority: 0.5,
-    },
+    // /search is noindex (tool page) — omit from sitemap.
     {
       url: absoluteUrl("/submit-event"),
       lastModified: generatedAt,
@@ -133,14 +122,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  const venuePages: MetadataRoute.Sitemap = [...venueNames]
-    .sort((a, b) => a.localeCompare(b))
-    .map((name) => ({
-      url: absoluteUrl(buildVenuePath(name)),
-      lastModified: catalogLastMod,
-      changeFrequency: "weekly" as const,
-      priority: 0.65,
-    }));
+  const venuePages: MetadataRoute.Sitemap = venues.map((venue) => ({
+    url: absoluteUrl(`/venue/${venue.slug}`),
+    lastModified: catalogLastMod,
+    changeFrequency: "weekly" as const,
+    priority: 0.65,
+  }));
 
   const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
     url: absoluteUrl(`/category/${category.slug}`),

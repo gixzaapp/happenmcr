@@ -16,9 +16,9 @@ export type NavDropdown = {
 /** Primary nav — Stitch UX category vibes */
 export const primaryNav: NavItem[] = [
   { href: "/category/live-music", label: "Gigs" },
-  { href: "/category/electronic", label: "Nightlife" },
+  { href: "/category/nightlife", label: "Nightlife" },
   { href: "/community", label: "Community" },
-  { href: "/search?q=festival", label: "Festivals" },
+  { href: "/category/festivals", label: "Festivals" },
 ];
 
 /** Local Manchester buzz — children come from the MCR Buzz registry. */

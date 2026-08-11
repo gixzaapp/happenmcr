@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/category/live-music", label: "Live music Manchester" },
-  { href: "/category/electronic", label: "Nightlife & club nights" },
+  { href: "/category/nightlife", label: "Nightlife & club nights" },
   { href: "/events/free", label: "Free Manchester events" },
   { href: "/events/today", label: "What's on today" },
   { href: "/mcr-buzz/food-drink", label: "Food & drink" },

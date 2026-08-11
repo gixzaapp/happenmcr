@@ -43,8 +43,8 @@ export async function generateMetadata({
     keywords: q
       ? [q, "Manchester events", "HappenMCR search", "HappenMCR"]
       : ["search Manchester events", "HappenMCR"],
-    // Query result pages stay out of the index; blank landing can be indexed.
-    index: !q,
+    // Search UI is a tool page (thin / query-shaped) — keep out of the index.
+    index: false,
     follow: true,
   });
 }

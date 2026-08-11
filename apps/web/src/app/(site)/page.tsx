@@ -23,7 +23,6 @@ import {
 } from "@/lib/seo";
 import {
   categoryMatchesSlug,
-  slugifyCategory,
 } from "@happenmcr/types";
 
 /** ISR homepage — refreshed every 10 minutes. */
@@ -106,13 +105,13 @@ export default async function HomePage() {
       image: VIBE_IMAGES.gigs,
     },
     {
-      href: nightlifeCount > 0 ? "/category/electronic" : "/category/club",
+      href: "/category/nightlife",
       label: "NIGHTLIFE",
       countLabel: `${Math.max(nightlifeCount, 1)}+ Parties`,
       image: VIBE_IMAGES.nightlife,
     },
     {
-      href: `/category/${slugifyCategory("Arts And Culture")}`,
+      href: "/category/arts-culture",
       label: "WORKSHOPS",
       countLabel: `${Math.max(workshopsCount, 1)}+ Skills`,
       image: VIBE_IMAGES.workshops,

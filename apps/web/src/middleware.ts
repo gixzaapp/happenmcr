@@ -115,7 +115,8 @@ function londonYmd(reference = new Date()): string {
 
 /**
  * 308 URL hygiene for production hostnames.
- * Build the Location from Host / X-Forwarded-* — never from nextUrl's
+ * One hop to https://happenmcr.com{path}{search} — never keep www, never keep http.
+ * Build Location from Host / X-Forwarded-* — never from nextUrl's
  * internal upstream host (often `localhost:3000` behind nginx).
  */
 function seoRedirect(request: NextRequest): NextResponse | null {
@@ -125,26 +126,22 @@ function seoRedirect(request: NextRequest): NextResponse | null {
 
   if (!isCanonicalFamily) return null;
 
-  const targetHost = CANONICAL_HOST;
-  const incomingProto = requestProto(request);
-  const targetProto = incomingProto === "http" ? "https" : incomingProto;
-
   let pathname = request.nextUrl.pathname;
   if (pathname.length > 1 && pathname.endsWith("/")) {
     pathname = pathname.replace(/\/+$/, "") || "/";
   }
 
+  const incomingProto = requestProto(request);
   const needsRedirect =
-    host !== targetHost ||
-    incomingProto === "http" ||
+    host !== CANONICAL_HOST ||
+    incomingProto !== "https" ||
     pathname !== request.nextUrl.pathname;
 
   if (!needsRedirect) return null;
 
-  const destination = new URL(
-    `${pathname}${request.nextUrl.search}`,
-    `${targetProto}://${targetHost}`,
-  );
+  // Absolute URL required so crawlers never resolve a relative Location
+  // against www / http hosts mid-chain.
+  const destination = `https://${CANONICAL_HOST}${pathname}${request.nextUrl.search}`;
   return NextResponse.redirect(destination, 308);
 }
 

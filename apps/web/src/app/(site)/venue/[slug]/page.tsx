@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   buildVenuePath,
   slugifyVenue,
@@ -10,7 +10,7 @@ import {
   JsonLd,
   venueExploreLinks,
 } from "@/components/seo";
-import { getAllEvents } from "@/lib/api";
+import { getAllEvents, isIndexableVenue, listIndexableVenues } from "@/lib/api";
 import {
   buildBreadcrumbJsonLd,
   homeBreadcrumb,
@@ -38,12 +38,7 @@ function eventsForVenueSlug(
 
 export async function generateStaticParams() {
   const events = await getAllEvents();
-  const slugs = new Set<string>();
-  for (const event of events) {
-    if (!event.venue_name) continue;
-    slugs.add(slugifyVenue(event.venue_name));
-  }
-  return [...slugs].map((slug) => ({ slug }));
+  return listIndexableVenues(events).map((venue) => ({ slug: venue.slug }));
 }
 
 export async function generateMetadata({
@@ -72,6 +67,8 @@ export async function generateMetadata({
     title,
     description,
     path,
+    index: isIndexableVenue(count),
+    follow: true,
     keywords: [venueName, "Manchester venue", "Manchester events", "HappenMCR"],
   });
 }
@@ -84,6 +81,10 @@ export default async function VenuePage({ params }: VenuePageProps) {
   if (!venueName) notFound();
 
   const path = buildVenuePath(venueName);
+  if (`/venue/${params.slug}` !== path) {
+    permanentRedirect(path);
+  }
+
   const countLabel =
     matches.length === 1 ? "1 event" : `${matches.length} events`;
 

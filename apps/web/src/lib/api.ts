@@ -4,8 +4,15 @@ import type {
   CategoryInfo,
   Event,
 } from "@happenmcr/types";
-import { slugifyCategory } from "@happenmcr/types";
+import {
+  getEventCategory,
+  slugifyCategory,
+  slugifyVenue,
+} from "@happenmcr/types";
 import { getApiBaseUrl, REVALIDATE_SECONDS } from "./config";
+
+/** Minimum upcoming events before a curated category is sitemap'd / indexed. */
+export const MIN_CATEGORY_EVENTS_FOR_INDEX = 3;
 
 type FetchEventsOptions = {
   /** ISR window in seconds. Use `"no-store"` for SSR search (and similar). */
@@ -146,6 +153,87 @@ export function listCategories(events: Event[]): CategoryInfo[] {
   }
 
   return [...bySlug.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** True when the slug is one of HappenMCR's curated categories (not scraper tags). */
+export function isCuratedCategorySlug(slug: string): boolean {
+  const curated = getEventCategory(slug);
+  return Boolean(curated && curated.id !== "other");
+}
+
+/**
+ * Curated categories that currently have enough events to deserve indexing.
+ * Stops the sitemap flooding Google with thin scraper tags (/category/blues, etc.).
+ */
+export function listIndexableCategories(events: Event[]): CategoryInfo[] {
+  const counts = new Map<string, { info: CategoryInfo; count: number }>();
+
+  for (const event of events) {
+    if (!event.category) continue;
+    const curated = getEventCategory(event.category);
+    if (!curated || curated.id === "other") continue;
+
+    const slug = curated.id;
+    const existing = counts.get(slug);
+    if (existing) {
+      existing.count += 1;
+      continue;
+    }
+    counts.set(slug, {
+      info: { slug, name: curated.label },
+      count: 1,
+    });
+  }
+
+  return [...counts.values()]
+    .filter((entry) => entry.count >= MIN_CATEGORY_EVENTS_FOR_INDEX)
+    .map((entry) => entry.info)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Whether this category listing should be indexed (curated + enough events). */
+export function isIndexableCategory(
+  slug: string,
+  eventCount: number,
+): boolean {
+  const curated = getEventCategory(slug);
+  if (!curated || curated.id === "other") return false;
+  return eventCount >= MIN_CATEGORY_EVENTS_FOR_INDEX;
+}
+
+/** Minimum events at a venue before the hub is sitemap'd / indexed. */
+export const MIN_VENUE_EVENTS_FOR_INDEX = 2;
+
+export type VenueInfo = {
+  slug: string;
+  name: string;
+  count: number;
+};
+
+/** Venues with enough listings to earn an indexed hub page. */
+export function listIndexableVenues(events: Event[]): VenueInfo[] {
+  const bySlug = new Map<string, VenueInfo>();
+
+  for (const event of events) {
+    const name = event.venue_name?.trim();
+    if (!name) continue;
+    const slug = slugifyVenue(name);
+    if (!slug) continue;
+    const existing = bySlug.get(slug);
+    if (existing) {
+      existing.count += 1;
+      continue;
+    }
+    bySlug.set(slug, { slug, name, count: 1 });
+  }
+
+  return [...bySlug.values()]
+    .filter((venue) => venue.count >= MIN_VENUE_EVENTS_FOR_INDEX)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function isIndexableVenue(eventCount: number): boolean {
+  return eventCount >= MIN_VENUE_EVENTS_FOR_INDEX;
 }
 
 /** Soonest upcoming events within the next few days. */
