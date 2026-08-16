@@ -68,7 +68,12 @@ router.get("/weekend", async (_req, res) => {
 
 router.get("/free", async (_req, res) => {
   try {
-    const data = await listEvents({ isFree: true });
+    // Upcoming only — from start of today (Europe/London), same window as "today".
+    const { start } = getTodayRange();
+    const data = await listEvents({
+      isFree: true,
+      startTime: { gte: start },
+    });
     const body: ApiResponse<EventDto[]> = { data };
     res.json(body);
   } catch (error) {
