@@ -52,9 +52,15 @@ router.get("/today", async (_req, res) => {
 
 router.get("/weekend", async (_req, res) => {
   try {
-    const { start, end } = getWeekendRange();
+    const weekend = getWeekendRange();
+    const today = getTodayRange();
+    // Never include days before today (e.g. drop Saturday once Sunday starts).
+    const start =
+      weekend.start.getTime() > today.start.getTime()
+        ? weekend.start
+        : today.start;
     const data = await listEvents({
-      startTime: { gte: start, lte: end },
+      startTime: { gte: start, lte: weekend.end },
     });
     const body: ApiResponse<EventDto[]> = { data };
     res.json(body);
