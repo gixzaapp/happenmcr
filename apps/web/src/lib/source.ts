@@ -1,19 +1,18 @@
 /**
- * Scraped organiser images stay hidden until permission is confirmed.
- * Add a scraper source id here after written/verbal clearance, e.g.:
- *   "scraper:band-on-the-wall"
- *   "scraper:ao-arena"
- *   "scraper:coop-live"
- *   "scraper:o2-ritz"
- *   "scraper:albert-hall"
+ * Event image visibility.
+ *
+ * Scraped organiser images are shown by default. Add a source id to
+ * BLOCKED_SCRAPED_IMAGE_SOURCES only if we must hide that venue again.
  */
-const ALLOWED_SCRAPED_IMAGE_SOURCES = new Set<string>([
-  // Add allowed sources one by one after organiser permission.
+
+/** Scraper sources whose organiser photos must stay hidden. */
+const BLOCKED_SCRAPED_IMAGE_SOURCES = new Set<string>([
+  // e.g. "scraper:some-venue"
 ]);
 
 /**
- * Licensed / stock CDNs we control the choice of — safe to show even when the
- * event row still has a scraped `source` (e.g. after a manual image override).
+ * Licensed / stock CDNs we control the choice of — always safe to show
+ * (e.g. manual Pixabay / Unsplash overrides on scraped rows).
  */
 const STOCK_IMAGE_HOSTS = new Set([
   "cdn.pixabay.com",
@@ -25,12 +24,12 @@ export function isScrapedSource(source: string | null | undefined): boolean {
   return Boolean(source?.startsWith("scraper:"));
 }
 
-/** True when this scraper source may display organiser photos. */
-export function hasScrapedImagePermission(
+/** True when this scraper source must not display organiser photos. */
+export function isScrapedImageBlocked(
   source: string | null | undefined,
 ): boolean {
   if (!source) return false;
-  return ALLOWED_SCRAPED_IMAGE_SOURCES.has(source);
+  return BLOCKED_SCRAPED_IMAGE_SOURCES.has(source);
 }
 
 /** Manual / stock image URLs we chose ourselves (not organiser page scrapes). */
@@ -45,24 +44,26 @@ export function isStockImageUrl(imageUrl: string | null | undefined): boolean {
 }
 
 /**
- * Use the dark title poster instead of a scraped photo until permission
- * is on the allowlist above — unless image_url is a stock CDN override.
+ * Use the dark title poster only when there is no image, or the scraper
+ * source is explicitly blocked.
  */
 export function shouldUseSymbolicEventImage(
   source: string | null | undefined,
   imageUrl?: string | null,
 ): boolean {
+  if (!imageUrl) return true;
   if (isStockImageUrl(imageUrl)) return false;
-  return isScrapedSource(source) && !hasScrapedImagePermission(source);
+  if (isScrapedSource(source) && isScrapedImageBlocked(source)) return true;
+  return false;
 }
 
-/** Safe to expose image_url in UI / Open Graph (non-scraped, permitted, or stock). */
+/** Safe to expose image_url in UI / Open Graph / media proxy. */
 export function canShowEventImage(
   source: string | null | undefined,
   imageUrl: string | null | undefined,
 ): boolean {
   if (!imageUrl) return false;
   if (isStockImageUrl(imageUrl)) return true;
-  if (!isScrapedSource(source)) return true;
-  return hasScrapedImagePermission(source);
+  if (isScrapedSource(source) && isScrapedImageBlocked(source)) return false;
+  return true;
 }

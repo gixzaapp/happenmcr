@@ -16,10 +16,20 @@ const EVENT_IMAGE_HOSTS = [
   "alberthallmanchester.com",
   "www.alberthallmanchester.com",
   "img.cooplive.com",
+  "www.cooplive.com",
+  "cooplive.com",
   "www.ao-arena.com",
   "ao-arena.com",
   "img.evbuc.com",
   "cdn.evbuc.com",
+  "www.rncm.ac.uk",
+  "rncm.ac.uk",
+  "www.manchester.ac.uk",
+  "manchester.ac.uk",
+  "www.mmu.ac.uk",
+  "mmu.ac.uk",
+  "www.salford.ac.uk",
+  "salford.ac.uk",
 ];
 
 /** @type {import('next').NextConfig} */
