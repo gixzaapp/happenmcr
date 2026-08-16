@@ -1,4 +1,5 @@
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/London",
   weekday: "short",
   day: "numeric",
   month: "short",

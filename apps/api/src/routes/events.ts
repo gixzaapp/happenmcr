@@ -153,8 +153,11 @@ router.get("/category/:slug", async (req, res) => {
       return;
     }
 
+    // Upcoming only (from start of today, Europe/London) — soonest upcoming first.
+    const { start } = getTodayRange();
     const events = await listEvents({
       category: { not: null },
+      startTime: { gte: start },
     });
 
     let categoryName: string | null = null;
