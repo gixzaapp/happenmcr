@@ -96,7 +96,7 @@ export function isValidYmd(ymd: string): boolean {
 
 /**
  * Label for the current/upcoming weekend in London time
- * (matches API weekend window: Sat–Sun).
+ * (matches API weekend window: Sat–Sun, or Sunday-only once Saturday is over).
  */
 export function formatWeekendRange(reference: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -130,6 +130,10 @@ export function formatWeekendRange(reference: Date = new Date()): string {
 
   const saturdayUtc = Date.UTC(year, month - 1, day + daysUntilSaturday, 12);
   const sundayUtc = Date.UTC(year, month - 1, day + daysUntilSaturday + 1, 12);
+
+  if (weekday === 0) {
+    return shortDayFormatter.format(new Date(sundayUtc));
+  }
 
   return `${shortDayFormatter.format(new Date(saturdayUtc))} – ${shortDayFormatter.format(new Date(sundayUtc))}`;
 }

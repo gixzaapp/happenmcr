@@ -48,6 +48,9 @@ export default async function EventsWeekendPage() {
   const rangeLabel = formatWeekendRange();
   const countLabel =
     events.length === 1 ? "1 event" : `${events.length} events`;
+  const windowLabel = rangeLabel.includes("–")
+    ? "Saturday and Sunday"
+    : "Sunday";
 
   return (
     <>
@@ -61,7 +64,7 @@ export default async function EventsWeekendPage() {
         data={buildEventItemListJsonLd(events, {
           name: `Manchester events this weekend — ${rangeLabel}`,
           path: PATH,
-          description: `${countLabel} listed for Saturday and Sunday.`,
+          description: `${countLabel} listed for ${windowLabel}.`,
         })}
       />
       <header className="max-w-2xl">
@@ -72,7 +75,7 @@ export default async function EventsWeekendPage() {
           Manchester events this weekend
         </h1>
         <p className="mt-4 text-base text-secondary sm:text-lg">
-          {rangeLabel}. {countLabel} listed for Saturday and Sunday.
+          {rangeLabel}. {countLabel} listed for {windowLabel}.
         </p>
       </header>
 

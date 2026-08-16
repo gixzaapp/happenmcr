@@ -108,7 +108,10 @@ export function getDayRange(ymd: string): { start: Date; end: Date } | null {
   };
 }
 
-/** Current weekend if Sat/Sun, otherwise the upcoming Sat–Sun (Europe/London). */
+/**
+ * Current weekend if Sat/Sun, otherwise the upcoming Sat–Sun (Europe/London).
+ * On Sunday, Saturday is already over — range is Sunday only.
+ */
 export function getWeekendRange(reference = new Date()): { start: Date; end: Date } {
   const ymd = ymdInTimeZone(reference, TIME_ZONE);
   const weekday = weekdayInTimeZone(reference, TIME_ZONE);
@@ -116,8 +119,11 @@ export function getWeekendRange(reference = new Date()): { start: Date; end: Dat
   const saturday = addDaysYmd(ymd, daysUntilSaturday);
   const sunday = addDaysYmd(saturday, 1);
 
+  // Sunday: drop Saturday from the window.
+  const rangeStartYmd = weekday === 0 ? sunday : saturday;
+
   return {
-    start: zonedDateTimeToUtc(saturday, 0, 0, 0, 0, TIME_ZONE),
+    start: zonedDateTimeToUtc(rangeStartYmd, 0, 0, 0, 0, TIME_ZONE),
     end: zonedDateTimeToUtc(sunday, 23, 59, 59, 999, TIME_ZONE),
   };
 }
