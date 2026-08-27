@@ -3,7 +3,7 @@ import { createS3ObjectStorage } from "./s3.js";
 import type { ObjectStorage } from "./types.js";
 
 export type { ObjectStorage, PutObjectInput, StoredObject } from "./types.js";
-export { localUploadsAbsoluteDir, publicUploadsBaseUrl } from "./local.js";
+export { localUploadsAbsoluteDir, publicUploadsBaseUrl, deleteLocalUpload } from "./local.js";
 
 let cached: ObjectStorage | null = null;
 

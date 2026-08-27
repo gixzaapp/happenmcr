@@ -25,12 +25,32 @@ export const metadata = buildPageMetadata({
   ],
 });
 
-export default async function McrOnLensMapPage() {
+type McrOnLensMapPageProps = {
+  searchParams: { photo?: string | string[]; lat?: string | string[]; lng?: string | string[] };
+};
+
+function readParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0]?.trim() ?? "";
+  return value?.trim() ?? "";
+}
+
+function parseFocus(
+  searchParams: McrOnLensMapPageProps["searchParams"],
+): { photoId: string; lat: number; lng: number } | null {
+  const photoId = readParam(searchParams.photo);
+  const lat = Number(readParam(searchParams.lat));
+  const lng = Number(readParam(searchParams.lng));
+  if (!photoId || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { photoId, lat, lng };
+}
+
+export default async function McrOnLensMapPage({ searchParams }: McrOnLensMapPageProps) {
   const [photos, accessToken] = await Promise.all([
     getLensPhotos(),
     Promise.resolve(getMapboxToken()),
   ]);
   const pins = toLensMapPins(photos);
+  const focus = parseFocus(searchParams);
 
   return (
     <>
@@ -56,7 +76,7 @@ export default async function McrOnLensMapPage() {
         </div>
 
         {accessToken ? (
-          <McrOnLensMap accessToken={accessToken} pins={pins} />
+          <McrOnLensMap accessToken={accessToken} pins={pins} focus={focus} />
         ) : (
           <div className="rounded-xl border border-dashed border-industrial-black/15 bg-surface-container-low px-6 py-16 text-center">
             <p className="font-display text-xl font-bold text-industrial-black">

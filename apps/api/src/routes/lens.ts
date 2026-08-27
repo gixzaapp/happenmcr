@@ -2,13 +2,18 @@ import { Router, type Router as ExpressRouter } from "express";
 import multer from "multer";
 import type { ApiResponse } from "@happenmcr/types";
 import { prisma } from "../db.js";
-import { getObjectStorage } from "../services/storage/index.js";
+import {
+  deleteLocalUpload,
+  getObjectStorage,
+} from "../services/storage/index.js";
 import {
   buildLensImageKey,
   detectImageMime,
   isAllowedLensImageMime,
   lensImageMaxBytes,
 } from "../services/storage/lens-image.js";
+import { isLensReportCategory } from "../services/lens/report-categories.js";
+import { notifyLensPhotoReport } from "../services/lens/report-notify.js";
 
 const router: ExpressRouter = Router();
 
@@ -85,6 +90,117 @@ router.get("/photos", async (_req, res) => {
       data: [],
       error: "Failed to fetch lens photos",
     } satisfies ApiResponse<LensPhotoDto[]>);
+  }
+});
+
+function trimOptionalString(value: unknown, max: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > max) return null;
+  return trimmed;
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+router.post("/photos/:id/report", async (req, res) => {
+  try {
+    const id = String(req.params.id).trim();
+    if (!id) {
+      res.status(400).json({ error: "Photo id is required." });
+      return;
+    }
+
+    const body = (req.body ?? {}) as Record<string, unknown>;
+
+    if (typeof body.website === "string" && body.website.trim()) {
+      res.status(201).json({ data: { ok: true } });
+      return;
+    }
+
+    const categoryRaw = typeof body.category === "string" ? body.category.trim() : "";
+    if (!isLensReportCategory(categoryRaw)) {
+      res.status(400).json({ error: "Please choose a valid report category." });
+      return;
+    }
+
+    const details = trimOptionalString(body.details, 2000);
+    const reporterEmailRaw = trimOptionalString(body.reporterEmail, 320);
+    if (reporterEmailRaw && !isValidEmail(reporterEmailRaw)) {
+      res.status(400).json({ error: "Please enter a valid email address." });
+      return;
+    }
+
+    const existing = await prisma.lensPhoto.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ error: "Photo not found." });
+      return;
+    }
+
+    const siteUrl = (
+      process.env.SITE_URL?.trim() ||
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+      "https://happenmcr.com"
+    ).replace(/\/$/, "");
+    const feedUrl =
+      trimOptionalString(body.feedUrl, 500) || `${siteUrl}/mcr-buzz/mcr-on-lens`;
+
+    const sent = await notifyLensPhotoReport({
+      photoId: existing.id,
+      category: categoryRaw,
+      details,
+      reporterEmail: reporterEmailRaw,
+      photoTitle: existing.caption?.trim() || "Manchester photo",
+      photoUrl: existing.imageUrl,
+      location: existing.location,
+      feedUrl,
+    });
+
+    if (!sent) {
+      res.status(503).json({
+        error: "Report could not be sent right now. Please try again later.",
+      });
+      return;
+    }
+
+    res.status(201).json({
+      data: { ok: true, id: sent.id },
+    } satisfies ApiResponse<{ ok: true; id: string }>);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to send report." });
+  }
+});
+
+router.delete("/photos/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id).trim();
+    if (!id) {
+      res.status(400).json({ error: "Photo id is required." });
+      return;
+    }
+
+    const existing = await prisma.lensPhoto.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ error: "Photo not found." });
+      return;
+    }
+
+    await prisma.lensPhoto.delete({ where: { id } });
+
+    try {
+      await deleteLocalUpload(existing.imageKey);
+    } catch (error) {
+      console.error("[lens] failed to delete upload file", existing.imageKey, error);
+    }
+
+    res.json({
+      data: { ok: true, id },
+    } satisfies ApiResponse<{ ok: true; id: string }>);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete photo." });
   }
 });
 

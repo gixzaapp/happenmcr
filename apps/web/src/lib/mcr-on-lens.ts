@@ -25,6 +25,8 @@ export type LensFeedCard = {
   title: string;
   description: string;
   location: string;
+  lat: number | null;
+  lng: number | null;
   handle: string;
   avatarUrl: string;
   tags: string[];
@@ -32,27 +34,40 @@ export type LensFeedCard = {
   comments: number;
 };
 
+export const LENS_REPORT_CATEGORIES = [
+  { value: "inappropriate", label: "Inappropriate content" },
+  { value: "copyright", label: "Copyright / not their photo" },
+  { value: "wrong_location", label: "Wrong location" },
+  { value: "spam", label: "Spam or misleading" },
+  { value: "other", label: "Other" },
+] as const;
+
+export type LensReportCategory = (typeof LENS_REPORT_CATEGORIES)[number]["value"];
+
 export const MCR_ON_LENS_PATH = "/mcr-buzz/mcr-on-lens";
 export const MCR_ON_LENS_UPLOAD_PATH = `${MCR_ON_LENS_PATH}/upload`;
 export const MCR_ON_LENS_MAP_PATH = `${MCR_ON_LENS_PATH}/map`;
 export const MCR_ON_LENS_LABEL = "MCR on Lens";
 
-/** Design-reference card so the feed layout is visible before real uploads. */
-export const MOCK_LENS_FEED_CARD: LensFeedCard = {
-  id: "mock-neon-nights-nq",
-  imageUrl:
-    "https://images.unsplash.com/photo-1515586838455-8f8f940d6853?auto=format&fit=crop&w=1200&q=80",
-  title: "Neon Nights in NQ",
-  description:
-    "Capturing the electric atmosphere as the street art comes alive under the city lights. The mix of old brick and new neon is unmatched.",
-  location: "Northern Quarter, Manchester",
-  handle: "@MCR_Explorer",
-  avatarUrl:
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=96&q=80",
-  tags: ["#MCRStreetArt", "#UrbanPulse"],
-  likes: 248,
-  comments: 42,
-};
+/** Map page URL that focuses a photo pin (when coords exist). */
+export function lensMapFocusUrl(
+  card: Pick<LensFeedCard, "id" | "lat" | "lng">,
+): string | null {
+  if (
+    card.lat == null ||
+    card.lng == null ||
+    !Number.isFinite(card.lat) ||
+    !Number.isFinite(card.lng)
+  ) {
+    return null;
+  }
+  const params = new URLSearchParams({
+    photo: card.id,
+    lat: String(card.lat),
+    lng: String(card.lng),
+  });
+  return `${MCR_ON_LENS_MAP_PATH}?${params.toString()}`;
+}
 
 export function lensPhotoToFeedCard(photo: LensPhoto): LensFeedCard {
   const caption = photo.caption?.trim() || "Manchester through the lens";
@@ -69,6 +84,8 @@ export function lensPhotoToFeedCard(photo: LensPhoto): LensFeedCard {
     title,
     description,
     location: photo.location?.trim() || "Manchester",
+    lat: photo.lat,
+    lng: photo.lng,
     handle: "@happenmcr",
     avatarUrl:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=96&q=80",

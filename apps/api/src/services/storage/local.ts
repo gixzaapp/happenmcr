@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ObjectStorage, PutObjectInput, StoredObject } from "./types.js";
 
@@ -45,4 +45,15 @@ export function createLocalObjectStorage(): ObjectStorage {
 
 export function localUploadsAbsoluteDir(): string {
   return uploadsDir();
+}
+
+/** Best-effort delete of a local upload key (no-op if missing). */
+export async function deleteLocalUpload(key: string): Promise<void> {
+  const absolute = path.join(uploadsDir(), key);
+  try {
+    await unlink(absolute);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code !== "ENOENT") throw error;
+  }
 }

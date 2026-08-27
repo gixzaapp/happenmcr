@@ -7,15 +7,24 @@ import type { LensMapPin } from "@/lib/mcr-on-lens";
 
 const MANCHESTER_CENTER: [number, number] = [-2.244644, 53.480759];
 const DEFAULT_ZOOM = 12.2;
+const FOCUS_ZOOM = 15;
+
+export type LensMapFocus = {
+  photoId: string;
+  lat: number;
+  lng: number;
+};
 
 type McrOnLensMapProps = {
   accessToken: string;
   pins: LensMapPin[];
+  focus?: LensMapFocus | null;
 };
 
-export function McrOnLensMap({ accessToken, pins }: McrOnLensMapProps) {
+export function McrOnLensMap({ accessToken, pins, focus }: McrOnLensMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +57,7 @@ export function McrOnLensMap({ accessToken, pins }: McrOnLensMapProps) {
     return () => {
       map.remove();
       mapRef.current = null;
+      markersRef.current.clear();
     };
   }, [accessToken]);
 
@@ -55,8 +65,11 @@ export function McrOnLensMap({ accessToken, pins }: McrOnLensMapProps) {
     const map = mapRef.current;
     if (!map || !ready) return;
 
-    const markers: mapboxgl.Marker[] = [];
+    for (const marker of markersRef.current.values()) marker.remove();
+    markersRef.current.clear();
+
     const bounds = new mapboxgl.LngLatBounds();
+    const hasFocus = Boolean(focus);
 
     for (const pin of pins) {
       const el = document.createElement("button");
@@ -93,11 +106,21 @@ export function McrOnLensMap({ accessToken, pins }: McrOnLensMapProps) {
         .setPopup(popup)
         .addTo(map);
 
-      markers.push(marker);
+      markersRef.current.set(pin.id, marker);
       bounds.extend([pin.lng, pin.lat]);
     }
 
-    if (pins.length === 1) {
+    if (hasFocus && focus) {
+      map.flyTo({
+        center: [focus.lng, focus.lat],
+        zoom: FOCUS_ZOOM,
+        duration: 900,
+      });
+      const marker = markersRef.current.get(focus.photoId);
+      if (marker) {
+        window.setTimeout(() => marker.togglePopup(), 950);
+      }
+    } else if (pins.length === 1) {
       map.easeTo({ center: [pins[0]!.lng, pins[0]!.lat], zoom: 14 });
     } else if (pins.length > 1) {
       map.fitBounds(bounds, { padding: 64, maxZoom: 14, duration: 600 });
@@ -106,9 +129,10 @@ export function McrOnLensMap({ accessToken, pins }: McrOnLensMapProps) {
     }
 
     return () => {
-      for (const marker of markers) marker.remove();
+      for (const marker of markersRef.current.values()) marker.remove();
+      markersRef.current.clear();
     };
-  }, [pins, ready]);
+  }, [pins, ready, focus]);
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-industrial-black/10 bg-surface-container-low">
@@ -123,7 +147,7 @@ export function McrOnLensMap({ accessToken, pins }: McrOnLensMapProps) {
           <p className="text-sm font-semibold text-red-700">{error}</p>
         </div>
       ) : null}
-      {!error && pins.length === 0 ? (
+      {!error && pins.length === 0 && !focus ? (
         <div className="pointer-events-none absolute bottom-4 left-4 right-4 rounded-lg bg-canvas-white/95 px-4 py-3 text-sm text-secondary shadow">
           No geotagged uploads yet — add a location when you upload to pin photos
           here.
