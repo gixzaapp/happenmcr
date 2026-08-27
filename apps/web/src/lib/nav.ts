@@ -2,6 +2,7 @@ import {
   listMcrBuzzNavSections,
   mcrBuzzPath,
 } from "@/lib/mcr-buzz";
+import { MCR_ON_LENS_LABEL, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
 
 export type NavItem = {
   href: string;
@@ -24,10 +25,13 @@ export const primaryNav: NavItem[] = [
 /** Local Manchester buzz — children come from the MCR Buzz registry. */
 export const mcrBuzzNav: NavDropdown = {
   label: "MCR Buzz",
-  children: listMcrBuzzNavSections().map((section) => ({
-    href: mcrBuzzPath(section.slug),
-    label: section.label,
-  })),
+  children: [
+    ...listMcrBuzzNavSections().map((section) => ({
+      href: mcrBuzzPath(section.slug),
+      label: section.label,
+    })),
+    { href: MCR_ON_LENS_PATH, label: MCR_ON_LENS_LABEL },
+  ],
 };
 
 /** Fast time-based discovery — homepage hero + footer */

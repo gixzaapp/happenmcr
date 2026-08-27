@@ -81,6 +81,9 @@ importers:
       '@happenmcr/types':
         specifier: workspace:*
         version: link:../../packages/types
+      mapbox-gl:
+        specifier: ^3.29.0
+        version: 3.29.0
       next:
         specifier: ^14.2.30
         version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -94,6 +97,9 @@ importers:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@22.20.1)
     devDependencies:
+      '@types/mapbox-gl':
+        specifier: ^3.5.0
+        version: 3.5.0
       '@types/node':
         specifier: ^22.15.29
         version: 22.20.1
@@ -638,6 +644,10 @@ packages:
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==, tarball: https://registry.npmjs.org/@types/http-errors/-/http-errors-2.0.5.tgz}
 
+  '@types/mapbox-gl@3.5.0':
+    resolution: {integrity: sha512-3wVAUTC6q1UKatLP9YxFBnGJWi3neJUF9OKeyRdUf/BsYjZAP35xmZkL4zogVJbO3vdExuSVYCAkzUXjpjdhOg==, tarball: https://registry.npmjs.org/@types/mapbox-gl/-/mapbox-gl-3.5.0.tgz}
+    deprecated: This is a stub types definition. mapbox-gl provides its own type definitions, so you do not need this installed.
+
   '@types/multer@2.2.0':
     resolution: {integrity: sha512-3U1troeqGV8Ntp7Q3klwf4zr23VEoqYVocYXaswm9+8z3O9UHDYAqLxjJ/h550iRADTjKdOdhhasXw6gD6kYtg==, tarball: https://registry.npmjs.org/@types/multer/-/multer-2.2.0.tgz}
 
@@ -1129,6 +1139,9 @@ packages:
   lru-cache@11.5.2:
     resolution: {integrity: sha512-4pfM1Ff0x50o0tQwb5ucw/RzNyD0/YJME6IVcStalZuMWxdt3sR3huStTtxz4PUmvZfRguvDejasvQ2kifR11g==, tarball: https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.2.tgz}
     engines: {node: 20 || >=22}
+
+  mapbox-gl@3.29.0:
+    resolution: {integrity: sha512-Fnh1WLsZMfihwRZY5scp456iQuZo9G97tTpb26bf/Ejsi/L7O+4dE9+I03VoOor2ul3DEOp6F2P3273omyVsNw==, tarball: https://registry.npmjs.org/mapbox-gl/-/mapbox-gl-3.29.0.tgz}
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==, tarball: https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz}
@@ -1996,6 +2009,10 @@ snapshots:
 
   '@types/http-errors@2.0.5': {}
 
+  '@types/mapbox-gl@3.5.0':
+    dependencies:
+      mapbox-gl: 3.29.0
+
   '@types/multer@2.2.0':
     dependencies:
       '@types/express': 5.0.6
@@ -2533,6 +2550,8 @@ snapshots:
       js-tokens: 4.0.0
 
   lru-cache@11.5.2: {}
+
+  mapbox-gl@3.29.0: {}
 
   math-intrinsics@1.1.0: {}
 

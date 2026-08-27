@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@happenmcr/types": "workspace:*",
+    "mapbox-gl": "^3.29.0",
     "next": "^14.2.30",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.35.3"
   },
   "devDependencies": {
+    "@types/mapbox-gl": "^3.5.0",
     "@types/node": "^22.15.29",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

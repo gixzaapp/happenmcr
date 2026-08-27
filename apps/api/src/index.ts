@@ -21,6 +21,7 @@ import newsletterRouter from "./routes/newsletter.js";
 import slackRouter from "./routes/slack.js";
 import statsRouter from "./routes/stats.js";
 import submitEventRouter from "./routes/submit-event.js";
+import lensRouter from "./routes/lens.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -117,6 +118,7 @@ app.use("/ingest", ingestRouter);
 app.use("/stats", statsRouter);
 app.use("/newsletter", newsletterRouter);
 app.use("/submit-event", submitEventRouter);
+app.use("/lens", lensRouter);
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);

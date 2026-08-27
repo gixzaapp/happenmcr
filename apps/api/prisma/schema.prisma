@@ -92,3 +92,19 @@ model EventSubmission {
   @@index([slackNotifyStatus])
   @@map("event_submissions")
 }
+
+/** Community photos for MCR on Lens. */
+model LensPhoto {
+  id          String   @id @default(cuid())
+  imageKey    String   @map("image_key")
+  imageUrl    String   @map("image_url")
+  caption     String?
+  description String?
+  location    String?
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("lens_photos")
+}

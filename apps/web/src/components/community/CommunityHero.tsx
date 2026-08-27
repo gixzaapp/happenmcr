@@ -3,7 +3,11 @@ import Image from "next/image";
 const BANNER_IMAGE =
   "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1600&q=80";
 
-export function CommunityHero() {
+type CommunityHeroProps = {
+  submitAnchorId?: string;
+};
+
+export function CommunityHero({ submitAnchorId = "submit-project" }: CommunityHeroProps) {
   return (
     <section className="mb-stack-lg">
       <h1 className="industrial-line mb-4 font-display text-5xl font-extrabold tracking-tight text-industrial-black sm:text-headline-xl">
@@ -16,8 +20,8 @@ export function CommunityHero() {
       </p>
 
       <div
-        id="submit-project"
-        className="relative flex h-[300px] items-center overflow-hidden bg-industrial-black p-8 sm:p-12"
+        id={submitAnchorId}
+        className="relative flex h-[300px] scroll-mt-28 items-center overflow-hidden bg-industrial-black p-8 sm:p-12"
       >
         <Image
           src={BANNER_IMAGE}

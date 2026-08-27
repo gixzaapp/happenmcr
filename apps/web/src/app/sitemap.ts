@@ -4,6 +4,7 @@ import { getAllEvents, listIndexableCategories, listIndexableVenues } from "@/li
 import { getSiteUrl } from "@/lib/config";
 import { londonDateHorizon, londonYmd } from "@/lib/format";
 import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
+import { MCR_ON_LENS_MAP_PATH, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
 
 /**
@@ -84,6 +85,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: catalogLastMod,
       changeFrequency: "daily",
       priority: 0.75,
+    },
+    {
+      url: absoluteUrl(MCR_ON_LENS_PATH),
+      lastModified: generatedAt,
+      changeFrequency: "weekly",
+      priority: 0.65,
+    },
+    {
+      url: absoluteUrl(MCR_ON_LENS_MAP_PATH),
+      lastModified: generatedAt,
+      changeFrequency: "weekly",
+      priority: 0.6,
     },
     {
       url: absoluteUrl("/privacy"),

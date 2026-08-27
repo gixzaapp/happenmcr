@@ -35,6 +35,8 @@ Both should `Location: https://happenmcr.com/` (not `https://www.happenmcr.com/`
 
 Do **not** `pm2 stop` the web app while building — that causes nginx **502**. Build first, then restart.
 
+Always wipe `apps/web/.next` before building web. Skipping that leaves HTML referencing old `/_next/static/chunks/*.js` hashes → browser **“Application error: a client-side exception…”** / `ChunkLoadError`.
+
 ```bash
 cd /home/deploy/happenmcr
 
@@ -50,8 +52,9 @@ pnpm exec prisma generate
 pnpm build
 cd ../..
 
-# Web (keep old process running during build)
+# Web — wipe .next so chunk hashes match the new build (keep PM2 running during build)
 cd apps/web
+rm -rf .next
 pnpm build
 cd ../..
 
@@ -61,11 +64,33 @@ PORT=3000 API_URL=http://127.0.0.1:4000 pm2 restart happenmcr-web --update-env
 pm2 save
 pm2 status
 
-# Smoke checks
-curl -sI http://127.0.0.1:4000/health | head -5
-curl -sI http://127.0.0.1:3000 | head -5
+# Warm key routes (fresh ISR against the new build)
+curl -sI "http://127.0.0.1:3000/"
+curl -sI "http://127.0.0.1:3000/events/today"
+curl -sI "http://127.0.0.1:3000/events/weekend"
+curl -sI "http://127.0.0.1:3000/category/live-music"
+curl -sI "http://127.0.0.1:3000/mcr-buzz/mcr-on-lens"
+curl -sI "http://127.0.0.1:3000/mcr-buzz/mcr-on-lens/upload"
+curl -sI "http://127.0.0.1:3000/mcr-buzz/mcr-on-lens/map"
+
+# Public smoke checks
 curl -sI https://happenmcr.com | head -10
+curl -sI "https://happenmcr.com/events/weekend" | head -10
+curl -sI "https://happenmcr.com/mcr-buzz/mcr-on-lens" | head -10
+curl -s "http://127.0.0.1:4000/lens/photos" | head -c 200; echo
 ```
+
+Verify no missing chunks (every referenced JS must be **200**):
+
+```bash
+HTML=$(curl -sL "https://happenmcr.com/events/weekend")
+echo "$HTML" | grep -oE '/_next/static/chunks/[^"]+\.js' | sort -u | while read -r CHUNK; do
+  CODE=$(curl -sI -o /dev/null -w '%{http_code}' "https://happenmcr.com$CHUNK")
+  echo "$CODE  $CHUNK"
+done
+```
+
+If any line is `404`, rebuild web again (`rm -rf .next && pnpm build` + restart). Hard-refresh the browser after a clean deploy.
 
 If the API has no `/health` route, any known public API path is fine.
 
@@ -73,19 +98,23 @@ If the API has no `/health` route, any known public API path is fine.
 
 ## Web-only redeploy
 
+Same `.next` wipe — required every time, not only when something breaks.
+
 ```bash
 cd /home/deploy/happenmcr
 git pull
 pnpm --filter @happenmcr/types build   # only if types changed
 
 cd apps/web
+rm -rf .next
 pnpm build
 cd ../..
 
 PORT=3000 API_URL=http://127.0.0.1:4000 pm2 restart happenmcr-web --update-env
 pm2 save
 
-curl -sI https://happenmcr.com | head -10
+curl -sI "http://127.0.0.1:3000/events/weekend"
+curl -sI "https://happenmcr.com/events/weekend" | head -10
 ```
 
 ---
@@ -93,31 +122,26 @@ curl -sI https://happenmcr.com | head -10
 ## Safe deploy pattern (avoid 502 + chunk 404)
 
 1. **Never** `pm2 stop happenmcr-web` before `pnpm build` finishes.
-2. After every web build: `pm2 restart happenmcr-web` with **`PORT=3000`**.
-3. If listing pages show *“Application error”* / `ChunkLoadError` (stale ISR HTML → missing JS):
+2. **Always** `rm -rf apps/web/.next` before `pnpm build` (prevents ChunkLoadError).
+3. After every web build: `pm2 restart happenmcr-web` with **`PORT=3000`** and `API_URL=http://127.0.0.1:4000`.
+4. Warm key routes, then confirm chunks are **200** (script in Full redeploy above).
+
+### Emergency fix (site already showing “Application error”)
 
 ```bash
 cd /home/deploy/happenmcr/apps/web
-rm -rf .next/cache
+rm -rf .next
 pnpm build
 PORT=3000 API_URL=http://127.0.0.1:4000 pm2 restart happenmcr-web --update-env
+pm2 save
 
-# Warm key routes
+curl -sI "https://happenmcr.com/"
 curl -sI "https://happenmcr.com/events/today"
 curl -sI "https://happenmcr.com/events/weekend"
-curl -sI "https://happenmcr.com/"
+curl -sI "https://happenmcr.com/category/live-music"
 ```
 
-Confirm the page chunk is **200**, not 404:
-
-```bash
-CHUNK=$(curl -sL "https://happenmcr.com/events/today" \
-  | grep -oE '/_next/static/chunks/app/\(site\)/events/\(browse\)/today/page-[^"]+\.js' \
-  | head -1)
-echo "$CHUNK"
-curl -sI "https://happenmcr.com$CHUNK" | head -5
-```
-
+Then hard-refresh (Ctrl+Shift+R).
 ---
 
 ## Web stuck on port 4000 (`EADDRINUSE :::4000`)
@@ -201,8 +225,10 @@ sudo nginx -t && sudo systemctl reload nginx
 
 | App | Important vars |
 |-----|----------------|
-| `apps/api/.env` | `DATABASE_URL`, `PORT=4000`, `SITE_URL=https://happenmcr.com`, ingest/API keys |
-| `apps/web/.env.local` | `API_URL=http://127.0.0.1:4000`, `NEXT_PUBLIC_SITE_URL=https://happenmcr.com`, optional `NEXT_PUBLIC_GTM_ID` |
+| `apps/api/.env` | `DATABASE_URL`, `PORT=4000`, `SITE_URL=https://happenmcr.com`, ingest/API keys, optional `UPLOADS_DIR` / `PUBLIC_UPLOADS_BASE_URL` |
+| `apps/web/.env.local` | `API_URL=http://127.0.0.1:4000`, `NEXT_PUBLIC_SITE_URL=https://happenmcr.com`, **`MAPBOX_ACCESS_TOKEN`** (public `pk.` token for MCR on Lens geocode + map), optional `NEXT_PUBLIC_GTM_ID` |
+
+**MCR on Lens** needs `MAPBOX_ACCESS_TOKEN` in `apps/web/.env.local` (Mapbox public token). Without it, location autosuggest and the map page fail.
 
 Do not commit real secrets. Rotate any password that was pasted into chat or tickets.
 
@@ -211,7 +237,12 @@ Do not commit real secrets. Rotate any password that was pasted into chat or tic
 ## Quick post-deploy checklist
 
 - [ ] `pm2 status` — both `online`
-- [ ] Web listens on **3000**, API on **4000**
+- [ ] Web listens on **3000**, API on **4000** (only one `happenmcr-web`)
+- [ ] Deploy used `rm -rf apps/web/.next` before web build
 - [ ] `https://happenmcr.com` → 200 (not 502)
-- [ ] `/events/today` loads without ChunkLoadError
+- [ ] Chunk status script — no `404` lines
+- [ ] `/events/today`, `/events/weekend`, `/category/live-music` load without client exception
+- [ ] `/mcr-buzz/mcr-on-lens`, `/upload`, `/map` load
+- [ ] `MAPBOX_ACCESS_TOKEN` set on web (autosuggest + map)
+- [ ] Prisma migrations applied (`lens_photos` table exists)
 - [ ] A sample event page + `/media/event/{id}?v=card` if images changed
