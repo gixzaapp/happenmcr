@@ -10,7 +10,7 @@ type UseLocationSearchResult = {
 };
 
 /**
- * Debounced Mapbox forward-geocode autosuggest via `/api/geocode`.
+ * Debounced Mapbox forward-geocode autosuggest via `/geocode`.
  */
 export function useLocationSearch(query: string): UseLocationSearchResult {
   const [results, setResults] = useState<GeocodeSuggestion[]>([]);
@@ -33,7 +33,7 @@ export function useLocationSearch(query: string): UseLocationSearchResult {
 
       try {
         const response = await fetch(
-          `/api/geocode?query=${encodeURIComponent(trimmed)}`,
+          `/geocode?query=${encodeURIComponent(trimmed)}`,
         );
         const body = (await response.json()) as GeocodeResponse;
 

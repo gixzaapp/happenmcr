@@ -16,6 +16,7 @@ type MapboxGeocodeResponse = {
   message?: string;
 };
 
+/** Mapbox forward geocode — served at `/geocode` (not `/api/geocode`; nginx sends `/api/*` to Express). */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query")?.trim() ?? "";
