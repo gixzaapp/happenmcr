@@ -226,7 +226,9 @@ sudo nginx -t && sudo systemctl reload nginx
 | App | Important vars |
 |-----|----------------|
 | `apps/api/.env` | `DATABASE_URL`, `PORT=4000`, `SITE_URL=https://happenmcr.com`, ingest/API keys, optional `UPLOADS_DIR` / `PUBLIC_UPLOADS_BASE_URL` |
-| `apps/web/.env.local` | `API_URL=http://127.0.0.1:4000`, `NEXT_PUBLIC_SITE_URL=https://happenmcr.com`, **`MAPBOX_ACCESS_TOKEN`** (public `pk.` token for MCR on Lens geocode + map), optional `NEXT_PUBLIC_GTM_ID` |
+| `apps/web/.env.local` | `API_URL=http://127.0.0.1:4000`, `NEXT_PUBLIC_SITE_URL=https://happenmcr.com`, **`DATABASE_URL`** (same DB as API — Auth.js), **`AUTH_SECRET`**, **`AUTH_URL=https://happenmcr.com`**, **`AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`**, **`AUTH_FACEBOOK_ID` / `AUTH_FACEBOOK_SECRET`**, **`MAPBOX_ACCESS_TOKEN`**, optional `NEXT_PUBLIC_GTM_ID` |
+
+OAuth redirect URIs (production): `https://happenmcr.com/auth/callback/google` and `.../facebook`. Auth routes live at `/auth/*` (not `/api/auth/*` — nginx sends `/api` to Express).
 
 **MCR on Lens** needs `MAPBOX_ACCESS_TOKEN` in `apps/web/.env.local` (Mapbox public token). Without it, location autosuggest and the map page fail.
 

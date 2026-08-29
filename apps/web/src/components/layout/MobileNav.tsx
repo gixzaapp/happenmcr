@@ -1,5 +1,6 @@
 "use client";
 
+import { MobileHeaderAuth } from "@/components/auth/HeaderAuth";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -167,6 +168,8 @@ export function MobileNav() {
         <Suspense fallback={null}>
           <MobileSearchField onSubmitted={() => setOpen(false)} />
         </Suspense>
+
+        <MobileHeaderAuth onNavigate={() => setOpen(false)} />
       </nav>
     </div>
   );

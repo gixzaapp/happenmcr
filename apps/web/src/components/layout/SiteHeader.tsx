@@ -1,5 +1,6 @@
 "use client";
 
+import { HeaderAuth } from "@/components/auth/HeaderAuth";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -161,12 +162,7 @@ export function SiteHeader() {
             <HeaderSearchField />
           </Suspense>
 
-          <button
-            type="button"
-            className="hard-shadow hidden rounded-lg bg-bee-yellow px-6 py-2 text-sm font-semibold tracking-wide text-industrial-black transition-all sm:inline-flex"
-          >
-            Sign In
-          </button>
+          <HeaderAuth />
 
           <MobileNav />
         </div>

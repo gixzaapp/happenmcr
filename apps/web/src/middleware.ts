@@ -9,6 +9,7 @@ const VID_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 const SKIP_PREFIXES = [
   "/_next",
+  "/auth",
   "/favicon",
   "/getmethevisitorcount",
   "/robots.txt",
