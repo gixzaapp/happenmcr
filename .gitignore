@@ -9,6 +9,9 @@ dist
 out
 build
 
+#artifacts
+artifacts
+
 # Env
 .env
 .env*.local
