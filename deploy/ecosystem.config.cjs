@@ -25,6 +25,7 @@ module.exports = {
         NODE_ENV: "production",
         PORT: "3000",
         API_URL: "http://127.0.0.1:4000",
+        AUTH_URL: "https://happenmcr.com",
       },
     },
   ],

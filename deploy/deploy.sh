@@ -63,6 +63,16 @@ green "==> API: migrate + build"
 green "==> Web: clean build"
 (
   cd apps/web
+  if [[ ! -f .env.local ]]; then
+    red "WARN: apps/web/.env.local missing — auth/login will fail"
+  elif ! grep -qE '^AUTH_SECRET=+.+' .env.local 2>/dev/null; then
+    red "WARN: AUTH_SECRET not set in apps/web/.env.local — login will fail"
+  elif ! grep -qE '^AUTH_GOOGLE_ID=+.+' .env.local 2>/dev/null; then
+    red "WARN: AUTH_GOOGLE_ID not set in apps/web/.env.local — Google login will fail"
+  fi
+  if grep -qE '^AUTH_URL=http://localhost' .env.local 2>/dev/null; then
+    red "WARN: AUTH_URL is localhost in .env.local — use https://happenmcr.com on VPS"
+  fi
   rm -rf .next
   pnpm build
 )
