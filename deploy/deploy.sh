@@ -77,6 +77,18 @@ green "==> Web: clean build"
   pnpm build
 )
 
+green "==> Web: database connectivity (auth adapter)"
+(
+  cd apps/web
+  node -e "
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    prisma.\$queryRaw\`SELECT 1\`
+      .then(() => { console.log('  DB OK'); return prisma.\$disconnect(); })
+      .catch((e) => { console.error('  DB FAIL — check DATABASE_URL in apps/web/.env.local'); console.error(e.message); process.exit(1); });
+  "
+)
+
 green "==> PM2 start/reload"
 pm2 startOrReload "$ROOT/deploy/ecosystem.config.cjs" --update-env
 pm2 restart happenmcr-web --update-env

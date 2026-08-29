@@ -1,10 +1,11 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
-
-type ProviderId = "google" | "facebook";
+import { Suspense, useState, useTransition } from "react";
+import {
+  signInWithFacebook,
+  signInWithGoogle,
+} from "@/app/(site)/login/actions";
 
 type SignInButtonsProps = {
   showFacebook?: boolean;
@@ -13,38 +14,52 @@ type SignInButtonsProps = {
 function SignInButtonsInner({ showFacebook = false }: SignInButtonsProps) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [loading, setLoading] = useState<ProviderId | null>(null);
+  const [pending, setPending] = useState<"google" | "facebook" | null>(null);
+  const [, startTransition] = useTransition();
 
-  async function onSignIn(provider: ProviderId) {
-    setLoading(provider);
-    try {
-      await signIn(provider, { callbackUrl });
-    } finally {
-      setLoading(null);
-    }
+  function onGoogle() {
+    setPending("google");
+    startTransition(async () => {
+      try {
+        await signInWithGoogle(callbackUrl);
+      } finally {
+        setPending(null);
+      }
+    });
+  }
+
+  function onFacebook() {
+    setPending("facebook");
+    startTransition(async () => {
+      try {
+        await signInWithFacebook(callbackUrl);
+      } finally {
+        setPending(null);
+      }
+    });
   }
 
   return (
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        onClick={() => onSignIn("google")}
-        disabled={loading !== null}
+        onClick={onGoogle}
+        disabled={pending !== null}
         className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-white px-5 py-3.5 font-display text-base font-semibold text-industrial-black transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-60"
       >
         <GoogleIcon />
-        {loading === "google" ? "Redirecting…" : "Continue with Google"}
+        {pending === "google" ? "Redirecting…" : "Continue with Google"}
       </button>
 
       {showFacebook ? (
         <button
           type="button"
-          onClick={() => onSignIn("facebook")}
-          disabled={loading !== null}
+          onClick={onFacebook}
+          disabled={pending !== null}
           className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-[#1877F2] px-5 py-3.5 font-display text-base font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <FacebookIcon />
-          {loading === "facebook" ? "Redirecting…" : "Continue with Facebook"}
+          {pending === "facebook" ? "Redirecting…" : "Continue with Facebook"}
         </button>
       ) : null}
     </div>
