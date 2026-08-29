@@ -2,21 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import {
   MCR_ON_LENS_MAP_PATH,
   MCR_ON_LENS_PATH,
   MCR_ON_LENS_UPLOAD_PATH,
 } from "@/lib/mcr-on-lens";
 
-const allItems = [
+const items = [
   { href: MCR_ON_LENS_PATH, label: "Home", icon: "home", match: "home" },
   {
     href: MCR_ON_LENS_UPLOAD_PATH,
     label: "Upload",
     icon: "upload",
     match: "upload",
-    requiresAuth: true,
   },
   {
     href: MCR_ON_LENS_MAP_PATH,
@@ -35,10 +33,6 @@ function activeMatch(pathname: string): "home" | "upload" | "map" {
 export function McrOnLensSidebar() {
   const pathname = usePathname();
   const active = activeMatch(pathname);
-  const { data: session } = useSession();
-  const items = allItems.filter(
-    (item) => !("requiresAuth" in item) || !item.requiresAuth || Boolean(session?.user),
-  );
 
   return (
     <aside className="sticky top-[73px] hidden h-[calc(100vh-73px)] w-64 shrink-0 flex-col border-r border-secondary/20 bg-canvas-white p-4 lg:flex">
@@ -76,10 +70,6 @@ export function McrOnLensSidebar() {
 export function McrOnLensMobileNav() {
   const pathname = usePathname();
   const active = activeMatch(pathname);
-  const { data: session } = useSession();
-  const items = allItems.filter(
-    (item) => !("requiresAuth" in item) || !item.requiresAuth || Boolean(session?.user),
-  );
 
   return (
     <nav

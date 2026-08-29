@@ -1,16 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { MCR_ON_LENS_UPLOAD_PATH } from "@/lib/mcr-on-lens";
 
 export function McrOnLensUploadFab() {
-  const { data: session, status } = useSession();
-
-  if (status === "loading" || !session?.user) {
-    return null;
-  }
-
   return (
     <Link
       href={MCR_ON_LENS_UPLOAD_PATH}
@@ -23,12 +14,6 @@ export function McrOnLensUploadFab() {
 }
 
 export function McrOnLensUploadCta() {
-  const { data: session, status } = useSession();
-
-  if (status === "loading" || !session?.user) {
-    return null;
-  }
-
   return (
     <Link
       href={MCR_ON_LENS_UPLOAD_PATH}
