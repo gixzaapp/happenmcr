@@ -4,7 +4,8 @@ import { SessionProvider } from "next-auth/react";
 import type { Session } from "next-auth";
 
 type AuthSessionProviderProps = {
-  session: Session | null;
+  /** Omit to fetch session client-side via /auth/session. */
+  session?: Session | null;
   children: React.ReactNode;
 };
 

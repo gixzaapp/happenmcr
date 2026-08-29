@@ -1,14 +1,11 @@
 import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
-import { getOptionalSession } from "@/lib/session";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
-/** Shared chrome for public pages. */
-export async function SiteShell({ children }: { children: React.ReactNode }) {
-  const session = await getOptionalSession();
-
+/** Shared chrome for public pages. Session loads client-side (avoids headers() in ISR routes). */
+export function SiteShell({ children }: { children: React.ReactNode }) {
   return (
-    <AuthSessionProvider session={session}>
+    <AuthSessionProvider>
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
         <main className="flex-1">{children}</main>

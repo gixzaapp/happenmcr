@@ -1,17 +1,57 @@
 # HappenMCR — Contabo deploy
 
 Deployment notes for the production VPS (`happenmcr.com`).  
-App lives at `/home/deploy/happenmcr` (adjust if your path differs).  
-Process manager: **PM2** (`happenmcr-api`, `happenmcr-web`).  
-Postgres: **Docker** (no OS `postgres` user).  
-Proxy: **nginx** → web `:3000`, API usually under `/api` → `:4000`.
+App lives at `/home/deploy/happenmcr`.  
+Process manager: **PM2** (`happenmcr-api`, `happenmcr-web`) — **deploy user only**.  
+Postgres: **Docker**.  
+Proxy: **nginx** → web `:3000`, API `/api` → `:4000`.
 
 | Service | Port | PM2 name |
 |---------|------|----------|
 | Next.js web | **3000** | `happenmcr-web` |
 | Express API | **4000** | `happenmcr-api` |
 
-Web SSR must call the API on loopback: `API_URL=http://127.0.0.1:4000`.
+---
+
+## Deploy (one command — use this every time)
+
+**Always as `deploy`, never root:**
+
+```bash
+cd ~/happenmcr
+chmod +x deploy/deploy.sh   # once
+./deploy/deploy.sh
+```
+
+The script: pulls, installs, migrates, builds API + web (wipes `.next`), reloads PM2 from `deploy/ecosystem.config.cjs`, runs smoke tests. **If smoke tests fail, the script exits non-zero** — check `pm2 logs`.
+
+---
+
+## Golden rules (why past deploys broke the site)
+
+| Mistake | What happened |
+|---------|----------------|
+| **`pm2` as root** while deploy also had PM2 | Two daemons fought over ports 3000/4000 → 500, 502, empty pages |
+| **`pnpm install` / `build` as root** | root-owned `node_modules` → deploy gets `EACCES` |
+| **Skipped `rm -rf .next`** | HTML pointed at old JS/CSS hashes → unstyled site / ChunkLoadError |
+| **Server-side `auth()` in layout** | Broke ISR event/category builds → 500 on those routes |
+| **API down (nothing on 4000)** | Sports empty, MCR on Lens empty, category 404 |
+
+**Never again:** do not run `pm2`, `pnpm install`, or `pnpm build` as root in `/home/deploy/happenmcr`.  
+Root is only for: `chown -R deploy:deploy /home/deploy/happenmcr`, `pm2 kill` (to clear a mistaken root PM2), nginx.
+
+**One-time cleanup if root PM2 was used:**
+
+```bash
+# as root
+pm2 kill
+chown -R deploy:deploy /home/deploy/happenmcr
+
+# as deploy
+cd ~/happenmcr && ./deploy/deploy.sh
+```
+
+PM2 config (ports, env): [`deploy/ecosystem.config.cjs`](ecosystem.config.cjs).
 
 ---
 
