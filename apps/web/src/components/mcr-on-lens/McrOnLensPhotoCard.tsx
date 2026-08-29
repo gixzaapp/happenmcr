@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { McrOnLensLikeButton } from "@/components/mcr-on-lens/McrOnLensLikeButton";
 import { McrOnLensPhotoLightbox } from "@/components/mcr-on-lens/McrOnLensPhotoLightbox";
 import { McrOnLensReportButton } from "@/components/mcr-on-lens/McrOnLensReportButton";
 import { lensMapFocusUrl, type LensFeedCard } from "@/lib/mcr-on-lens";
@@ -77,7 +78,7 @@ export function McrOnLensPhotoCard({ card }: McrOnLensPhotoCardProps) {
         </p>
 
         {card.tags.length > 0 ? (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {card.tags.map((tag) => (
               <span
                 key={tag}
@@ -90,14 +91,11 @@ export function McrOnLensPhotoCard({ card }: McrOnLensPhotoCardProps) {
         ) : null}
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-industrial-black/8 pt-4">
-          <div className="flex items-center gap-5 text-sm font-semibold text-secondary">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-xl">
-                favorite
-              </span>
-              {card.likes}
-            </span>
-          </div>
+          <McrOnLensLikeButton
+            photoId={card.id}
+            initialLikes={card.likes}
+            initialLiked={card.liked}
+          />
           <div className="flex shrink-0 items-center gap-3">
             <McrOnLensReportButton card={card} />
             <button

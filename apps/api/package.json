@@ -17,6 +17,8 @@
     "scrape": "tsx scripts/scrape.ts",
     "cron": "tsx scripts/cron-worker.ts",
     "list-submissions": "tsx scripts/list-submissions.ts",
+    "list-lens-photos": "tsx scripts/list-lens-photos.ts",
+    "delete-lens-photo": "tsx scripts/delete-lens-photo.ts",
     "set-event-image": "tsx scripts/set-event-image.ts",
     "test-submission-notify": "tsx scripts/test-submission-notify.ts",
     "playwright:install": "playwright install chromium"

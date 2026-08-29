@@ -1,5 +1,6 @@
 import { McrOnLensFeed, McrOnLensHero } from "@/components/mcr-on-lens";
 import { JsonLd } from "@/components/seo";
+import { auth } from "@/auth";
 import { buildBreadcrumbJsonLd, homeBreadcrumb } from "@/lib/jsonld";
 import { getLensPhotos } from "@/lib/lens-photos";
 import {
@@ -25,7 +26,8 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function McrOnLensHomePage() {
-  const photos = await getLensPhotos();
+  const session = await auth();
+  const photos = await getLensPhotos(session?.user?.id);
 
   return (
     <>

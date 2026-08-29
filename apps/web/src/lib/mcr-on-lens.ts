@@ -8,6 +8,8 @@ export type LensPhoto = {
   lng: number | null;
   uploader_name: string | null;
   uploader_image: string | null;
+  like_count: number;
+  liked: boolean;
   created_at: string;
 };
 
@@ -34,6 +36,7 @@ export type LensFeedCard = {
   avatarInitial: string;
   tags: string[];
   likes: number;
+  liked: boolean;
   comments: number;
 };
 
@@ -72,14 +75,35 @@ export function lensMapFocusUrl(
   return `${MCR_ON_LENS_MAP_PATH}?${params.toString()}`;
 }
 
+const LENS_HASHTAG_RE = /#[a-zA-Z0-9_]+/g;
+
+/** Split inline #tags from caption/description for badge row (mock card layout). */
+export function parseLensHashtags(text: string): {
+  description: string;
+  tags: string[];
+} {
+  const tags = [
+    ...new Set(
+      (text.match(LENS_HASHTAG_RE) ?? []).map((tag) => tag.toLowerCase()),
+    ),
+  ];
+  const description = text
+    .replace(LENS_HASHTAG_RE, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return { description, tags };
+}
+
 export function lensPhotoToFeedCard(photo: LensPhoto): LensFeedCard {
   const caption = photo.caption?.trim() || "Manchester through the lens";
   const title =
     caption.length > 48 ? `${caption.slice(0, 45).trimEnd()}…` : caption;
-  const description =
+  const rawDescription =
     photo.description?.trim() ||
     photo.caption?.trim() ||
     "Shared by the HappenMCR community.";
+  const { description, tags } = parseLensHashtags(rawDescription);
   const uploaderName = photo.uploader_name?.trim() || "HappenMCR";
   const uploaderInitial = uploaderName.charAt(0).toUpperCase();
 
@@ -87,15 +111,17 @@ export function lensPhotoToFeedCard(photo: LensPhoto): LensFeedCard {
     id: photo.id,
     imageUrl: photo.image_url,
     title,
-    description,
+    description:
+      description || "Shared by the HappenMCR community.",
     location: photo.location?.trim() || "Manchester",
     lat: photo.lat,
     lng: photo.lng,
     handle: uploaderName,
     avatarUrl: photo.uploader_image?.trim() || "",
     avatarInitial: uploaderInitial,
-    tags: [],
-    likes: 0,
+    tags,
+    likes: photo.like_count ?? 0,
+    liked: photo.liked ?? false,
     comments: 0,
   };
 }

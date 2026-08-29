@@ -107,11 +107,26 @@ model LensPhoto {
   uploaderName  String?  @map("uploader_name")
   uploaderImage String?  @map("uploader_image")
   createdAt     DateTime @default(now()) @map("created_at")
-  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes         LensPhotoLike[]
 
   @@index([createdAt])
   @@index([userId])
   @@map("lens_photos")
+}
+
+model LensPhotoLike {
+  id        String    @id @default(cuid())
+  photoId   String    @map("photo_id")
+  userId    String    @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  photo     LensPhoto @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([photoId, userId])
+  @@index([photoId])
+  @@index([userId])
+  @@map("lens_photo_likes")
 }
 
 /** OAuth sign-in (Auth.js). */
@@ -124,7 +139,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   lensPhotos    LensPhoto[]
-  createdAt     DateTime    @default(now()) @map("created_at")
+  lensPhotoLikes LensPhotoLike[]
+  createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
   @@map("users")

@@ -14,7 +14,7 @@ import {
 } from "../services/storage/lens-image.js";
 import { isLensReportCategory } from "../services/lens/report-categories.js";
 import { notifyLensPhotoReport } from "../services/lens/report-notify.js";
-import { authorizeLensUpload } from "../lib/lens-upload-auth.js";
+import { authorizeLensUpload, authorizeLensUser } from "../lib/lens-upload-auth.js";
 
 const router: ExpressRouter = Router();
 
@@ -28,6 +28,8 @@ export type LensPhotoDto = {
   lng: number | null;
   uploader_name: string | null;
   uploader_image: string | null;
+  like_count: number;
+  liked: boolean;
   created_at: string;
 };
 
@@ -57,18 +59,22 @@ function parseCoord(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function toDto(row: {
-  id: string;
-  imageUrl: string;
-  caption: string | null;
-  description: string | null;
-  location: string | null;
-  lat: number | null;
-  lng: number | null;
-  uploaderName: string | null;
-  uploaderImage: string | null;
-  createdAt: Date;
-}): LensPhotoDto {
+function toDto(
+  row: {
+    id: string;
+    imageUrl: string;
+    caption: string | null;
+    description: string | null;
+    location: string | null;
+    lat: number | null;
+    lng: number | null;
+    uploaderName: string | null;
+    uploaderImage: string | null;
+    createdAt: Date;
+  },
+  likeCount: number,
+  liked: boolean,
+): LensPhotoDto {
   return {
     id: row.id,
     image_url: row.imageUrl,
@@ -79,17 +85,40 @@ function toDto(row: {
     lng: row.lng,
     uploader_name: row.uploaderName,
     uploader_image: row.uploaderImage,
+    like_count: likeCount,
+    liked,
     created_at: row.createdAt.toISOString(),
   };
 }
 
-router.get("/photos", async (_req, res) => {
+router.get("/photos", async (req, res) => {
   try {
+    const viewer = authorizeLensUser(req);
     const rows = await prisma.lensPhoto.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
+      include: {
+        _count: { select: { likes: true } },
+      },
     });
-    const body: ApiResponse<LensPhotoDto[]> = { data: rows.map(toDto) };
+
+    let likedPhotoIds = new Set<string>();
+    if (viewer && rows.length > 0) {
+      const likedRows = await prisma.lensPhotoLike.findMany({
+        where: {
+          userId: viewer.userId,
+          photoId: { in: rows.map((row) => row.id) },
+        },
+        select: { photoId: true },
+      });
+      likedPhotoIds = new Set(likedRows.map((row) => row.photoId));
+    }
+
+    const body: ApiResponse<LensPhotoDto[]> = {
+      data: rows.map((row) =>
+        toDto(row, row._count.likes, likedPhotoIds.has(row.id)),
+      ),
+    };
     res.json(body);
   } catch (error) {
     console.error(error);
@@ -97,6 +126,56 @@ router.get("/photos", async (_req, res) => {
       data: [],
       error: "Failed to fetch lens photos",
     } satisfies ApiResponse<LensPhotoDto[]>);
+  }
+});
+
+router.post("/photos/:id/like", async (req, res) => {
+  try {
+    const viewer = authorizeLensUser(req);
+    if (!viewer) {
+      res.status(401).json({ error: "Sign in to like photos." });
+      return;
+    }
+
+    const id = String(req.params.id).trim();
+    if (!id) {
+      res.status(400).json({ error: "Photo id is required." });
+      return;
+    }
+
+    const photo = await prisma.lensPhoto.findUnique({ where: { id } });
+    if (!photo) {
+      res.status(404).json({ error: "Photo not found." });
+      return;
+    }
+
+    const existing = await prisma.lensPhotoLike.findUnique({
+      where: {
+        photoId_userId: { photoId: id, userId: viewer.userId },
+      },
+    });
+
+    let liked: boolean;
+    if (existing) {
+      await prisma.lensPhotoLike.delete({ where: { id: existing.id } });
+      liked = false;
+    } else {
+      await prisma.lensPhotoLike.create({
+        data: { photoId: id, userId: viewer.userId },
+      });
+      liked = true;
+    }
+
+    const like_count = await prisma.lensPhotoLike.count({
+      where: { photoId: id },
+    });
+
+    res.json({
+      data: { liked, like_count },
+    } satisfies ApiResponse<{ liked: boolean; like_count: number }>);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update like." });
   }
 });
 
@@ -293,7 +372,9 @@ router.post("/photos", (req, res, next) => {
       },
     });
 
-    const response: ApiResponse<LensPhotoDto> = { data: toDto(row) };
+    const response: ApiResponse<LensPhotoDto> = {
+      data: toDto(row, 0, true),
+    };
     res.status(201).json(response);
   } catch (error) {
     console.error(error);

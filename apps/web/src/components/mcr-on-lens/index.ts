@@ -5,6 +5,7 @@ export { McrOnLensMobileNav, McrOnLensSidebar } from "./McrOnLensNav";
 export { McrOnLensPhotoLightbox } from "./McrOnLensPhotoLightbox";
 export { McrOnLensPhotoCard } from "./McrOnLensPhotoCard";
 export { McrOnLensReportButton } from "./McrOnLensReportButton";
+export { McrOnLensLikeButton } from "./McrOnLensLikeButton";
 export { McrOnLensUploadFab, McrOnLensUploadCta } from "./McrOnLensUploadLinks";
 export { McrOnLensUploadSignIn } from "./McrOnLensUploadSignIn";
 export { McrOnLensUploadForm } from "./McrOnLensUploadForm";
