@@ -2,11 +2,18 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import Facebook from "next-auth/providers/facebook";
 import Google from "next-auth/providers/google";
+import type { Provider } from "next-auth/providers";
 import { prisma } from "@/lib/prisma";
+
+const providers: Provider[] = [Google];
+
+if (process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET) {
+  providers.push(Facebook);
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [Google, Facebook],
+  providers,
   pages: {
     signIn: "/login",
   },
