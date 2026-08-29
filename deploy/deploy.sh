@@ -69,6 +69,8 @@ green "==> Web: clean build"
     red "WARN: AUTH_SECRET not set in apps/web/.env.local — login will fail"
   elif ! grep -qE '^AUTH_GOOGLE_ID=+.+' .env.local 2>/dev/null; then
     red "WARN: AUTH_GOOGLE_ID not set in apps/web/.env.local — Google login will fail"
+  elif ! grep -qE '^DATABASE_URL=+.+' .env.local 2>/dev/null; then
+    red "WARN: DATABASE_URL not set in apps/web/.env.local — copy from apps/api/.env (Auth.js needs Postgres)"
   fi
   if grep -qE '^AUTH_URL=http://localhost' .env.local 2>/dev/null; then
     red "WARN: AUTH_URL is localhost in .env.local — use https://happenmcr.com on VPS"
@@ -81,6 +83,12 @@ green "==> Web: database connectivity (auth adapter)"
 (
   cd apps/web
   node -e "
+    require('dotenv').config({ path: '.env.local' });
+    if (!process.env.DATABASE_URL) {
+      console.error('  DB FAIL — DATABASE_URL missing in apps/web/.env.local');
+      console.error('  Copy the same DATABASE_URL line from apps/api/.env');
+      process.exit(1);
+    }
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
     prisma.\$queryRaw\`SELECT 1\`
