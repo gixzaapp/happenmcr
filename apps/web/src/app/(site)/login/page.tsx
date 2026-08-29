@@ -11,6 +11,10 @@ export const metadata = buildPageMetadata({
 });
 
 export default function LoginPage() {
+  const showFacebook = Boolean(
+    process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET,
+  );
+
   return (
     <section className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-grid-margin py-stack-lg">
       <div className="rounded-2xl bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.08)] ring-1 ring-industrial-black/5">
@@ -22,7 +26,7 @@ export default function LoginPage() {
         </p>
 
         <div className="mt-8">
-          <SignInButtons />
+          <SignInButtons showFacebook={showFacebook} />
         </div>
 
         <p className="mt-6 text-center text-xs text-secondary">

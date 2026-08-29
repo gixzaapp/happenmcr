@@ -1,52 +1,66 @@
 "use client";
 
-import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 type ProviderId = "google" | "facebook";
 
-function signInHref(provider: ProviderId, callbackUrl: string): string {
-  const params = new URLSearchParams({ callbackUrl });
-  return `/auth/signin/${provider}?${params.toString()}`;
-}
+type SignInButtonsProps = {
+  showFacebook?: boolean;
+};
 
-function SignInButtonsInner() {
+function SignInButtonsInner({ showFacebook = false }: SignInButtonsProps) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const [loading, setLoading] = useState<ProviderId | null>(null);
+
+  async function onSignIn(provider: ProviderId) {
+    setLoading(provider);
+    try {
+      await signIn(provider, { callbackUrl });
+    } finally {
+      setLoading(null);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      <Link
-        href={signInHref("google", callbackUrl)}
-        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-white px-5 py-3.5 font-display text-base font-semibold text-industrial-black transition hover:bg-surface-container-low"
+      <button
+        type="button"
+        onClick={() => onSignIn("google")}
+        disabled={loading !== null}
+        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-white px-5 py-3.5 font-display text-base font-semibold text-industrial-black transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-60"
       >
         <GoogleIcon />
-        Continue with Google
-      </Link>
+        {loading === "google" ? "Redirecting…" : "Continue with Google"}
+      </button>
 
-      <Link
-        href={signInHref("facebook", callbackUrl)}
-        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-[#1877F2] px-5 py-3.5 font-display text-base font-semibold text-white transition hover:brightness-95"
-      >
-        <FacebookIcon />
-        Continue with Facebook
-      </Link>
+      {showFacebook ? (
+        <button
+          type="button"
+          onClick={() => onSignIn("facebook")}
+          disabled={loading !== null}
+          className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-[#1877F2] px-5 py-3.5 font-display text-base font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <FacebookIcon />
+          {loading === "facebook" ? "Redirecting…" : "Continue with Facebook"}
+        </button>
+      ) : null}
     </div>
   );
 }
 
-export function SignInButtons() {
+export function SignInButtons({ showFacebook = false }: SignInButtonsProps) {
   return (
     <Suspense
       fallback={
         <div className="flex flex-col gap-3">
           <div className="h-[52px] animate-pulse rounded-lg bg-industrial-black/5" />
-          <div className="h-[52px] animate-pulse rounded-lg bg-industrial-black/5" />
         </div>
       }
     >
-      <SignInButtonsInner />
+      <SignInButtonsInner showFacebook={showFacebook} />
     </Suspense>
   );
 }
