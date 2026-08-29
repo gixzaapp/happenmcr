@@ -14,6 +14,7 @@ import {
 } from "../services/storage/lens-image.js";
 import { isLensReportCategory } from "../services/lens/report-categories.js";
 import { notifyLensPhotoReport } from "../services/lens/report-notify.js";
+import { authorizeLensUpload } from "../lib/lens-upload-auth.js";
 
 const router: ExpressRouter = Router();
 
@@ -25,6 +26,8 @@ export type LensPhotoDto = {
   location: string | null;
   lat: number | null;
   lng: number | null;
+  uploader_name: string | null;
+  uploader_image: string | null;
   created_at: string;
 };
 
@@ -62,6 +65,8 @@ function toDto(row: {
   location: string | null;
   lat: number | null;
   lng: number | null;
+  uploaderName: string | null;
+  uploaderImage: string | null;
   createdAt: Date;
 }): LensPhotoDto {
   return {
@@ -72,6 +77,8 @@ function toDto(row: {
     location: row.location,
     lat: row.lat,
     lng: row.lng,
+    uploader_name: row.uploaderName,
+    uploader_image: row.uploaderImage,
     created_at: row.createdAt.toISOString(),
   };
 }
@@ -231,6 +238,12 @@ router.post("/photos", (req, res, next) => {
   });
 }, async (req, res) => {
   try {
+    const uploader = authorizeLensUpload(req);
+    if (!uploader) {
+      res.status(401).json({ error: "Sign in to upload photos." });
+      return;
+    }
+
     const body = (req.body ?? {}) as Record<string, unknown>;
 
     // Honeypot
@@ -274,6 +287,9 @@ router.post("/photos", (req, res, next) => {
         location,
         lat,
         lng,
+        userId: uploader.userId,
+        uploaderName: uploader.name,
+        uploaderImage: uploader.image,
       },
     });
 

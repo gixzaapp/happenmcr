@@ -6,6 +6,8 @@ export type LensPhoto = {
   location: string | null;
   lat: number | null;
   lng: number | null;
+  uploader_name: string | null;
+  uploader_image: string | null;
   created_at: string;
 };
 
@@ -29,6 +31,7 @@ export type LensFeedCard = {
   lng: number | null;
   handle: string;
   avatarUrl: string;
+  avatarInitial: string;
   tags: string[];
   likes: number;
   comments: number;
@@ -77,6 +80,8 @@ export function lensPhotoToFeedCard(photo: LensPhoto): LensFeedCard {
     photo.description?.trim() ||
     photo.caption?.trim() ||
     "Shared by the HappenMCR community.";
+  const uploaderName = photo.uploader_name?.trim() || "HappenMCR";
+  const uploaderInitial = uploaderName.charAt(0).toUpperCase();
 
   return {
     id: photo.id,
@@ -86,9 +91,9 @@ export function lensPhotoToFeedCard(photo: LensPhoto): LensFeedCard {
     location: photo.location?.trim() || "Manchester",
     lat: photo.lat,
     lng: photo.lng,
-    handle: "@happenmcr",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=96&q=80",
+    handle: uploaderName,
+    avatarUrl: photo.uploader_image?.trim() || "",
+    avatarInitial: uploaderInitial,
     tags: [],
     likes: 0,
     comments: 0,

@@ -27,13 +27,21 @@ export function McrOnLensPhotoCard({ card }: McrOnLensPhotoCardProps) {
           />
 
           <div className="pointer-events-none absolute right-3 top-3 inline-flex items-center gap-2 rounded-full bg-industrial-black/55 py-1 pl-1 pr-3 backdrop-blur-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={card.avatarUrl}
-              alt=""
-              className="h-7 w-7 rounded-full object-cover ring-1 ring-white/30"
-            />
-            <span className="text-sm font-semibold text-white">{card.handle}</span>
+            {card.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={card.avatarUrl}
+                alt=""
+                className="h-7 w-7 rounded-full object-cover ring-1 ring-white/30"
+              />
+            ) : (
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-bee-yellow text-xs font-bold text-industrial-black ring-1 ring-white/30">
+                {card.avatarInitial}
+              </span>
+            )}
+            <span className="max-w-[8rem] truncate text-sm font-semibold text-white">
+              {card.handle}
+            </span>
           </div>
 
           <h3 className="pointer-events-none absolute bottom-4 left-4 right-16 font-display text-2xl font-bold leading-tight text-white sm:text-3xl">

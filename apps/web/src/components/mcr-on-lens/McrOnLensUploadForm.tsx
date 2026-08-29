@@ -8,17 +8,11 @@ import {
   type SelectedLocation,
 } from "@/components/location";
 import type { GeocodeSuggestion } from "@/lib/geocode";
+import { uploadLensPhoto } from "@/app/(site)/mcr-buzz/mcr-on-lens/upload/actions";
 import { MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
-
-function getApiBase(): string {
-  return (
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-    "http://localhost:4000"
-  );
-}
 
 type Status =
   | { type: "idle" }
@@ -127,18 +121,12 @@ export function McrOnLensUploadForm() {
     payload.set("website", website);
 
     try {
-      const response = await fetch(`${getApiBase()}/lens/photos`, {
-        method: "POST",
-        body: payload,
-      });
-      const body = (await response.json().catch(() => ({}))) as {
-        error?: string;
-      };
+      const result = await uploadLensPhoto(payload);
 
-      if (!response.ok) {
+      if (!result.ok) {
         setStatus({
           type: "error",
-          message: body.error || "Could not upload the photo. Try again.",
+          message: result.error,
         });
         return;
       }

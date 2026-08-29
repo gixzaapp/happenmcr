@@ -10,6 +10,7 @@ const { loadProductionEnv } = require("./env.cjs");
 
 const ROOT = process.env.HAPPENMCR_ROOT || "/home/deploy/happenmcr";
 const { apiEnv, webEnv, databaseUrl } = loadProductionEnv(ROOT);
+const authSecret = apiEnv.AUTH_SECRET || webEnv.AUTH_SECRET || "";
 
 const webEnvMerged = {
   NODE_ENV: "production",
@@ -19,7 +20,7 @@ const webEnvMerged = {
   NEXT_PUBLIC_SITE_URL: webEnv.NEXT_PUBLIC_SITE_URL || "https://happenmcr.com",
   NEXT_PUBLIC_API_URL: webEnv.NEXT_PUBLIC_API_URL || "https://happenmcr.com/api",
   DATABASE_URL: databaseUrl,
-  AUTH_SECRET: webEnv.AUTH_SECRET || "",
+  AUTH_SECRET: authSecret,
   AUTH_GOOGLE_ID: webEnv.AUTH_GOOGLE_ID || "",
   AUTH_GOOGLE_SECRET: webEnv.AUTH_GOOGLE_SECRET || "",
   AUTH_FACEBOOK_ID: webEnv.AUTH_FACEBOOK_ID || "",
@@ -39,6 +40,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         ...apiEnv,
+        AUTH_SECRET: authSecret,
       },
     },
     {

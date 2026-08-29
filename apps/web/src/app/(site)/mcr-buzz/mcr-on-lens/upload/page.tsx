@@ -1,5 +1,6 @@
 import { McrOnLensHero, McrOnLensUploadForm } from "@/components/mcr-on-lens";
 import { JsonLd } from "@/components/seo";
+import { auth } from "@/auth";
 import { buildBreadcrumbJsonLd, homeBreadcrumb } from "@/lib/jsonld";
 import {
   MCR_ON_LENS_LABEL,
@@ -7,6 +8,7 @@ import {
   MCR_ON_LENS_UPLOAD_PATH,
 } from "@/lib/mcr-on-lens";
 import { buildPageMetadata } from "@/lib/seo";
+import { redirect } from "next/navigation";
 
 export const metadata = buildPageMetadata({
   title: `Upload · ${MCR_ON_LENS_LABEL}`,
@@ -21,7 +23,14 @@ export const metadata = buildPageMetadata({
   ],
 });
 
-export default function McrOnLensUploadPage() {
+export default async function McrOnLensUploadPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect(
+      `/login?callbackUrl=${encodeURIComponent(MCR_ON_LENS_UPLOAD_PATH)}`,
+    );
+  }
+
   return (
     <>
       <JsonLd
