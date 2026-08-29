@@ -60,10 +60,11 @@ export function HeaderAuth() {
     <div ref={rootRef} className="relative hidden sm:block">
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded-lg border border-industrial-black/10 bg-surface-container-low px-3 py-2 text-sm font-semibold text-industrial-black transition hover:bg-industrial-black/5"
+        className="inline-flex items-center rounded-full border border-industrial-black/10 bg-surface-container-low p-0.5 transition hover:bg-industrial-black/5"
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
+        aria-label={`Account menu for ${label}`}
         onClick={() => setOpen((value) => !value)}
       >
         {session.user.image ? (
@@ -71,22 +72,13 @@ export function HeaderAuth() {
           <img
             src={session.user.image}
             alt=""
-            className="h-7 w-7 rounded-full object-cover"
+            className="h-8 w-8 rounded-full object-cover"
           />
         ) : (
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-bee-yellow text-xs font-bold text-industrial-black">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-bee-yellow text-xs font-bold text-industrial-black">
             {initial}
           </span>
         )}
-        <span className="max-w-[8rem] truncate">{label}</span>
-        <span
-          className={`material-symbols-outlined text-base transition ${
-            open ? "rotate-180" : ""
-          }`}
-          aria-hidden
-        >
-          expand_more
-        </span>
       </button>
 
       <div
