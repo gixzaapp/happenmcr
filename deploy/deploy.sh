@@ -111,10 +111,12 @@ green "==> Web: clean build"
 
 green "==> Web: database connectivity (auth adapter)"
 (
-  cd "$ROOT"
+  cd "$ROOT/apps/web"
   node -e "
-    const { loadProductionEnv } = require('./deploy/env.cjs');
-    const { databaseUrl } = loadProductionEnv(process.cwd());
+    const path = require('path');
+    const root = path.resolve(process.cwd(), '../..');
+    const { loadProductionEnv } = require(path.join(root, 'deploy/env.cjs'));
+    const { databaseUrl } = loadProductionEnv(root);
     process.env.DATABASE_URL = databaseUrl;
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
