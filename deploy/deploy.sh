@@ -20,6 +20,24 @@ fi
 
 cd "$ROOT"
 
+# ── 1b. Sync DATABASE_URL from API → web (one DB, no duplicate manual copy) ─
+sync_web_database_url() {
+  local api_env="$ROOT/apps/api/.env"
+  local web_env="$ROOT/apps/web/.env.local"
+  [[ -f "$api_env" ]] || return 0
+  [[ -f "$web_env" ]] || touch "$web_env"
+  if grep -qE '^DATABASE_URL=+.+' "$web_env" 2>/dev/null; then
+    return 0
+  fi
+  local line
+  line="$(grep -E '^DATABASE_URL=' "$api_env" | head -1 || true)"
+  if [[ -n "$line" ]]; then
+    green "  Syncing DATABASE_URL from apps/api/.env → apps/web/.env.local"
+    printf '\n%s\n' "$line" >> "$web_env"
+  fi
+}
+sync_web_database_url
+
 # ── 2. Fix root-owned files from past mistaken deploys ───────────────────
 if find "$ROOT/node_modules" -user root 2>/dev/null | head -1 | grep -q .; then
   red "WARN: root-owned node_modules detected — ask root to run:"
@@ -60,40 +78,49 @@ green "==> API: migrate + build"
   pnpm build
 )
 
+green "==> Web: env check"
+(
+  cd "$ROOT"
+  node -e "
+    const { loadProductionEnv } = require('./deploy/env.cjs');
+    const { webEnv, databaseUrl } = loadProductionEnv(process.cwd());
+    const missing = [];
+    if (!webEnv.AUTH_SECRET) missing.push('AUTH_SECRET');
+    if (!webEnv.AUTH_GOOGLE_ID) missing.push('AUTH_GOOGLE_ID');
+    if (!webEnv.AUTH_GOOGLE_SECRET) missing.push('AUTH_GOOGLE_SECRET');
+    if (!databaseUrl) missing.push('DATABASE_URL (apps/web/.env.local or apps/api/.env)');
+    if (missing.length) {
+      console.error('  AUTH CONFIG FAIL — add to apps/web/.env.local:');
+      missing.forEach((k) => console.error('    ' + k));
+      process.exit(1);
+    }
+    if ((webEnv.AUTH_URL || '').includes('localhost')) {
+      console.error('  AUTH CONFIG FAIL — AUTH_URL must be https://happenmcr.com on VPS');
+      process.exit(1);
+    }
+    console.log('  Auth env OK');
+  "
+)
+
 green "==> Web: clean build"
 (
   cd apps/web
-  if [[ ! -f .env.local ]]; then
-    red "WARN: apps/web/.env.local missing — auth/login will fail"
-  elif ! grep -qE '^AUTH_SECRET=+.+' .env.local 2>/dev/null; then
-    red "WARN: AUTH_SECRET not set in apps/web/.env.local — login will fail"
-  elif ! grep -qE '^AUTH_GOOGLE_ID=+.+' .env.local 2>/dev/null; then
-    red "WARN: AUTH_GOOGLE_ID not set in apps/web/.env.local — Google login will fail"
-  elif ! grep -qE '^DATABASE_URL=+.+' .env.local 2>/dev/null; then
-    red "WARN: DATABASE_URL not set in apps/web/.env.local — copy from apps/api/.env (Auth.js needs Postgres)"
-  fi
-  if grep -qE '^AUTH_URL=http://localhost' .env.local 2>/dev/null; then
-    red "WARN: AUTH_URL is localhost in .env.local — use https://happenmcr.com on VPS"
-  fi
   rm -rf .next
   pnpm build
 )
 
 green "==> Web: database connectivity (auth adapter)"
 (
-  cd apps/web
+  cd "$ROOT"
   node -e "
-    require('dotenv').config({ path: '.env.local' });
-    if (!process.env.DATABASE_URL) {
-      console.error('  DB FAIL — DATABASE_URL missing in apps/web/.env.local');
-      console.error('  Copy the same DATABASE_URL line from apps/api/.env');
-      process.exit(1);
-    }
+    const { loadProductionEnv } = require('./deploy/env.cjs');
+    const { databaseUrl } = loadProductionEnv(process.cwd());
+    process.env.DATABASE_URL = databaseUrl;
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
     prisma.\$queryRaw\`SELECT 1\`
       .then(() => { console.log('  DB OK'); return prisma.\$disconnect(); })
-      .catch((e) => { console.error('  DB FAIL — check DATABASE_URL in apps/web/.env.local'); console.error(e.message); process.exit(1); });
+      .catch((e) => { console.error('  DB FAIL —', e.message); process.exit(1); });
   "
 )
 
