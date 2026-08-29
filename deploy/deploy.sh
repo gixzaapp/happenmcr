@@ -79,6 +79,7 @@ green "==> Web: clean build"
 
 green "==> PM2 start/reload"
 pm2 startOrReload "$ROOT/deploy/ecosystem.config.cjs" --update-env
+pm2 restart happenmcr-web --update-env
 pm2 save
 
 sleep 4
@@ -99,11 +100,34 @@ check() {
   fi
 }
 
+# Every referenced JS chunk must exist — missing chunks → "Application error" on click
+verify_chunks() {
+  local label=$1 path=$2
+  local html chunk code
+  html="$(curl -sL "http://127.0.0.1:${WEB_PORT}${path}" || true)"
+  while IFS= read -r chunk; do
+    [[ -z "$chunk" ]] && continue
+    code="$(curl -sI -o /dev/null -w '%{http_code}' -g "http://127.0.0.1:${WEB_PORT}${chunk}" || echo "000")"
+    if [[ "$code" != "200" ]]; then
+      red "  MISSING CHUNK $code  ${chunk}  (page: ${path})"
+      fail=1
+    fi
+  done < <(echo "$html" | grep -oE '/_next/static/chunks/[^"]+\.js' | sort -u)
+  if [[ "$fail" -eq 0 ]]; then
+    green "  OK chunks  ${label}"
+  fi
+}
+
 check "API today"        "http://127.0.0.1:${API_PORT}/events/today"
 check "API lens"         "http://127.0.0.1:${API_PORT}/lens/photos"
 check "Web home"         "http://127.0.0.1:${WEB_PORT}/"
 check "Web category"     "http://127.0.0.1:${WEB_PORT}/category/live-music"
 check "Web MCR on Lens"  "http://127.0.0.1:${WEB_PORT}/mcr-buzz/mcr-on-lens"
+check "Web events today" "http://127.0.0.1:${WEB_PORT}/events/today"
+
+verify_chunks "home" "/"
+verify_chunks "events/today" "/events/today"
+verify_chunks "category" "/category/live-music"
 
 pm2 status
 
