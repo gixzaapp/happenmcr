@@ -4,8 +4,7 @@ import type { Event } from "@happenmcr/types";
 import { timingNav } from "@/lib/nav";
 import { HappeningToday } from "./HappeningToday";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1515586838455-8f8f940d6853?auto=format&fit=crop&w=2000&q=80";
+const HERO_IMAGE = "/images/hero-manchester.webp";
 
 const timingIcons: Record<string, string> = {
   Today: "today",
@@ -26,7 +25,10 @@ export function HomeHero({ todayEvents = [] }: HomeHeroProps) {
           alt="Manchester city streets at night"
           fill
           priority
-          sizes="100vw"
+          unoptimized
+          sizes="(max-width: 1280px) 100vw, 1400px"
+          placeholder="blur"
+          blurDataURL="data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoKAAcABgCIJZQAAu0vAQpmgAD+YWBbzN00kt2FqKYs9sKVc6lFqji9AAA="
           className="object-cover"
         />
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-industrial-black via-industrial-black/40 to-transparent" />
