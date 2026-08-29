@@ -7,11 +7,10 @@ import {
   JsonLd,
 } from "@/components/seo";
 import {
-  getAllEvents,
   getCategoryEvents,
   isIndexableCategory,
-  listIndexableCategories,
 } from "@/lib/api";
+import { listEventCategories } from "@happenmcr/types";
 import {
   buildBreadcrumbJsonLd,
   homeBreadcrumb,
@@ -31,10 +30,9 @@ type CategoryPageProps = {
 };
 
 export async function generateStaticParams() {
-  const events = await getAllEvents();
-  return listIndexableCategories(events).map((category) => ({
-    slug: category.slug,
-  }));
+  return listEventCategories()
+    .filter((category) => category.id !== "other")
+    .map((category) => ({ slug: category.id }));
 }
 
 export async function generateMetadata({

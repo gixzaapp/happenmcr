@@ -63,7 +63,28 @@ PORT=3000 API_URL=http://127.0.0.1:4000 pm2 restart happenmcr-web --update-env
 
 pm2 save
 pm2 status
+```
 
+**If `pm2 status` is empty** (no rows — e.g. VPS reboot, `pm2 kill`, or first deploy), `restart` does nothing. Use **`start`** instead:
+
+```bash
+pm2 start pnpm \
+  --name happenmcr-api \
+  --cwd /home/deploy/happenmcr/apps/api \
+  -- start
+
+PORT=3000 API_URL=http://127.0.0.1:4000 pm2 start pnpm \
+  --name happenmcr-web \
+  --cwd /home/deploy/happenmcr/apps/web \
+  -- start
+
+pm2 save
+pm2 status
+```
+
+Then smoke-check:
+
+```bash
 # Warm key routes (fresh ISR against the new build)
 curl -sI "http://127.0.0.1:3000/"
 curl -sI "http://127.0.0.1:3000/events/today"
@@ -142,6 +163,23 @@ curl -sI "https://happenmcr.com/category/live-music"
 ```
 
 Then hard-refresh (Ctrl+Shift+R).
+
+### `/category/*` or event detail pages return 500
+
+Listing pages (`/`, `/events/today`, `/venue/...`) can work while category and event detail 500. Common causes:
+
+1. **Auth DB not migrated** — `apps/web/.env.local` has `DATABASE_URL` + `AUTH_SECRET` but `User`/`Session` tables missing. Fix: `pnpm exec prisma migrate deploy` in `apps/api`, then rebuild web.
+2. **Stale `.next` after auth/chunk changes** — `rm -rf .next && pnpm build` + restart web (see above).
+3. **See the actual error:**
+
+```bash
+pm2 logs happenmcr-web --lines 80
+curl -sI "http://127.0.0.1:3000/category/live-music"
+curl -sI "http://127.0.0.1:4000/events/category/live-music"
+```
+
+Localhost category should be **200**; API category should be **200**. If API is 200 but web is 500, the log line above the stack trace is the fix.
+
 ---
 
 ## Web stuck on port 4000 (`EADDRINUSE :::4000`)
@@ -230,6 +268,15 @@ sudo nginx -t && sudo systemctl reload nginx
 
 OAuth redirect URIs (production): `https://happenmcr.com/auth/callback/google` and `.../facebook`. Auth routes live at `/auth/*` (not `/api/auth/*` — nginx sends `/api` to Express).
 
+After enabling auth, run migrations on the API (creates `User`, `Account`, `Session` tables):
+
+```bash
+cd /home/deploy/happenmcr/apps/api
+pnpm exec prisma migrate deploy
+```
+
+If auth env is set but migrations were skipped, `/category/*` and `/events/{slug}` can return **500** while listing pages still look fine. Check `pm2 logs happenmcr-web` for `[auth]` or Prisma errors.
+
 **MCR on Lens** needs `MAPBOX_ACCESS_TOKEN` in `apps/web/.env.local` (Mapbox public token). Without it, location autosuggest and the map page fail.
 
 Do not commit real secrets. Rotate any password that was pasted into chat or tickets.
@@ -244,6 +291,7 @@ Do not commit real secrets. Rotate any password that was pasted into chat or tic
 - [ ] `https://happenmcr.com` → 200 (not 502)
 - [ ] Chunk status script — no `404` lines
 - [ ] `/events/today`, `/events/weekend`, `/category/live-music` load without client exception
+- [ ] Open an event detail link from today — not 500
 - [ ] `/mcr-buzz/mcr-on-lens`, `/upload`, `/map` load
 - [ ] `MAPBOX_ACCESS_TOKEN` set on web (autosuggest + map)
 - [ ] Prisma migrations applied (`lens_photos` table exists)

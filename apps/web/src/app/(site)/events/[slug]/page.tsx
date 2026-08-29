@@ -33,7 +33,7 @@ const PREBUILD_DAYS = 90;
 
 /** Pre-render upcoming event detail pages for SEO. */
 export async function generateStaticParams() {
-  const events = await getAllEvents();
+  const events = await getAllEvents({ cache: "no-store" });
   const now = Date.now();
   const horizon = now + PREBUILD_DAYS * 24 * 60 * 60 * 1000;
 

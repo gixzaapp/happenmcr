@@ -37,7 +37,7 @@ function eventsForVenueSlug(
 }
 
 export async function generateStaticParams() {
-  const events = await getAllEvents();
+  const events = await getAllEvents({ cache: "no-store" });
   return listIndexableVenues(events).map((venue) => ({ slug: venue.slug }));
 }
 

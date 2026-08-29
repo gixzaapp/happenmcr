@@ -33,10 +33,12 @@ export function HeaderAuth() {
 
   if (status === "loading") {
     return (
-      <span
-        className="hidden h-10 w-24 animate-pulse rounded-lg bg-industrial-black/5 sm:inline-block"
-        aria-hidden
-      />
+      <Link
+        href="/login"
+        className="hard-shadow hidden rounded-lg bg-bee-yellow px-6 py-2 text-sm font-semibold tracking-wide text-industrial-black transition-all sm:inline-flex"
+      >
+        Sign In
+      </Link>
     );
   }
 

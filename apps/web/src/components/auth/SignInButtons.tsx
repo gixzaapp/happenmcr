@@ -1,46 +1,37 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 
 type ProviderId = "google" | "facebook";
+
+function signInHref(provider: ProviderId, callbackUrl: string): string {
+  const params = new URLSearchParams({ callbackUrl });
+  return `/auth/signin/${provider}?${params.toString()}`;
+}
 
 function SignInButtonsInner() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [loading, setLoading] = useState<ProviderId | null>(null);
-
-  async function onSignIn(provider: ProviderId) {
-    setLoading(provider);
-    try {
-      await signIn(provider, { callbackUrl });
-    } finally {
-      setLoading(null);
-    }
-  }
 
   return (
     <div className="flex flex-col gap-3">
-      <button
-        type="button"
-        onClick={() => onSignIn("google")}
-        disabled={loading !== null}
-        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-white px-5 py-3.5 font-display text-base font-semibold text-industrial-black transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-60"
+      <Link
+        href={signInHref("google", callbackUrl)}
+        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-white px-5 py-3.5 font-display text-base font-semibold text-industrial-black transition hover:bg-surface-container-low"
       >
         <GoogleIcon />
-        {loading === "google" ? "Redirecting…" : "Continue with Google"}
-      </button>
+        Continue with Google
+      </Link>
 
-      <button
-        type="button"
-        onClick={() => onSignIn("facebook")}
-        disabled={loading !== null}
-        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-[#1877F2] px-5 py-3.5 font-display text-base font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+      <Link
+        href={signInHref("facebook", callbackUrl)}
+        className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-industrial-black/15 bg-[#1877F2] px-5 py-3.5 font-display text-base font-semibold text-white transition hover:brightness-95"
       >
         <FacebookIcon />
-        {loading === "facebook" ? "Redirecting…" : "Continue with Facebook"}
-      </button>
+        Continue with Facebook
+      </Link>
     </div>
   );
 }

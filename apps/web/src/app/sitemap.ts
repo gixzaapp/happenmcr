@@ -29,7 +29,7 @@ function latestEventDate(events: Event[], fallback: Date): Date {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const generatedAt = new Date();
-  const events = await getAllEvents();
+  const events = await getAllEvents({ cache: "no-store" });
   const categories = listIndexableCategories(events);
   const venues = listIndexableVenues(events);
   const catalogLastMod = latestEventDate(events, generatedAt);
