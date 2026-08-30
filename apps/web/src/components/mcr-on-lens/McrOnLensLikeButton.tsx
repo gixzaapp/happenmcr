@@ -63,12 +63,13 @@ export function McrOnLensLikeButton({
         aria-pressed={liked}
         aria-label={liked ? "Unlike photo" : "Like photo"}
         className={`inline-flex items-center gap-1.5 text-sm font-semibold transition disabled:opacity-60 ${
-          liked ? "text-primary" : "text-secondary hover:text-primary"
+          liked ? "text-bee-yellow" : "text-secondary hover:text-bee-yellow"
         }`}
       >
         <span
-          className="material-symbols-outlined text-xl"
-          style={{ fontVariationSettings: liked ? '"FILL" 1' : '"FILL" 0' }}
+          className={`material-symbols-outlined text-xl${
+            liked ? " material-symbols-filled" : ""
+          }`}
           aria-hidden
         >
           favorite

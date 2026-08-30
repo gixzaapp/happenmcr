@@ -6,8 +6,8 @@ Process manager: **PM2** (`happenmcr-api`, `happenmcr-web`) — **deploy user on
 Postgres: **Docker**.  
 Proxy: **nginx** → web `:3000`, API `/api` → `:4000`.
 
-| Service | Port | PM2 name |
-|---------|------|----------|
+| Service     | Port     | PM2 name        |
+| ----------- | -------- | --------------- |
 | Next.js web | **3000** | `happenmcr-web` |
 | Express API | **4000** | `happenmcr-api` |
 
@@ -29,13 +29,13 @@ The script: pulls, installs, migrates, builds API + web (wipes `.next`), reloads
 
 ## Golden rules (why past deploys broke the site)
 
-| Mistake | What happened |
-|---------|----------------|
-| **`pm2` as root** while deploy also had PM2 | Two daemons fought over ports 3000/4000 → 500, 502, empty pages |
-| **`pnpm install` / `build` as root** | root-owned `node_modules` → deploy gets `EACCES` |
-| **Skipped `rm -rf .next`** | HTML pointed at old JS/CSS hashes → unstyled site / ChunkLoadError |
-| **Server-side `auth()` in layout** | Broke ISR event/category builds → 500 on those routes |
-| **API down (nothing on 4000)** | Sports empty, MCR on Lens empty, category 404 |
+| Mistake                                     | What happened                                                      |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| **`pm2` as root** while deploy also had PM2 | Two daemons fought over ports 3000/4000 → 500, 502, empty pages    |
+| **`pnpm install` / `build` as root**        | root-owned `node_modules` → deploy gets `EACCES`                   |
+| **Skipped `rm -rf .next`**                  | HTML pointed at old JS/CSS hashes → unstyled site / ChunkLoadError |
+| **Server-side `auth()` in layout**          | Broke ISR event/category builds → 500 on those routes              |
+| **API down (nothing on 4000)**              | Sports empty, MCR on Lens empty, category 404                      |
 
 **Never again:** do not run `pm2`, `pnpm install`, or `pnpm build` as root in `/home/deploy/happenmcr`.  
 Root is only for: `chown -R deploy:deploy /home/deploy/happenmcr`, `pm2 kill` (to clear a mistaken root PM2), nginx.
@@ -49,6 +49,8 @@ chown -R deploy:deploy /home/deploy/happenmcr
 
 # as deploy
 cd ~/happenmcr && ./deploy/deploy.sh
+
+cd ~/happenmcr && git pull && ./deploy/deploy.sh
 ```
 
 PM2 config (ports, env): [`deploy/ecosystem.config.cjs`](ecosystem.config.cjs).
@@ -301,9 +303,9 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## Env reminders
 
-| App | Important vars |
-|-----|----------------|
-| `apps/api/.env` | `DATABASE_URL`, `PORT=4000`, `SITE_URL=https://happenmcr.com`, ingest/API keys, optional `UPLOADS_DIR` / `PUBLIC_UPLOADS_BASE_URL` |
+| App                   | Important vars                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/api/.env`       | `DATABASE_URL`, `PORT=4000`, `SITE_URL=https://happenmcr.com`, ingest/API keys, optional `UPLOADS_DIR` / `PUBLIC_UPLOADS_BASE_URL`                                                                                                                                                                                                            |
 | `apps/web/.env.local` | `API_URL=http://127.0.0.1:4000`, `NEXT_PUBLIC_SITE_URL=https://happenmcr.com`, **`DATABASE_URL`** (same DB as API — Auth.js), **`AUTH_SECRET`**, **`AUTH_URL=https://happenmcr.com`**, **`AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`**, **`AUTH_FACEBOOK_ID` / `AUTH_FACEBOOK_SECRET`**, **`MAPBOX_ACCESS_TOKEN`**, optional `NEXT_PUBLIC_GTM_ID` |
 
 OAuth redirect URIs (production): `https://happenmcr.com/auth/callback/google` and `.../facebook`. Auth routes live at `/auth/*` (not `/api/auth/*` — nginx sends `/api` to Express).
