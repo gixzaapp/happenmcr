@@ -67,9 +67,14 @@ export function McrOnLensLikeButton({
         }`}
       >
         <span
-          className={`material-symbols-outlined text-xl${
+          className={`material-symbols-outlined text-[1.35rem] leading-none${
             liked ? " material-symbols-filled" : ""
           }`}
+          style={
+            liked
+              ? { fontVariationSettings: '"FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24' }
+              : undefined
+          }
           aria-hidden
         >
           favorite
