@@ -51,6 +51,10 @@ export type PageSeoOptions = {
    * Use for the homepage brand title.
    */
   absoluteTitle?: boolean;
+  /** ISO 8601 — used for `article` Open Graph (og:article:published_time). */
+  publishedTime?: string;
+  /** ISO 8601 — used for `article` Open Graph (og:article:modified_time). */
+  modifiedTime?: string;
 };
 
 function normalizeKeywords(
@@ -99,6 +103,8 @@ export function buildPageMetadata(options: PageSeoOptions): Metadata {
     index = true,
     follow = true,
     absoluteTitle = false,
+    publishedTime,
+    modifiedTime,
   } = options;
 
   const canonicalUrl = canonicalUrlForPath(path);
@@ -130,6 +136,8 @@ export function buildPageMetadata(options: PageSeoOptions): Metadata {
       type,
       locale: "en_GB",
       siteName: SITE_NAME,
+      ...(publishedTime ? { publishedTime } : {}),
+      ...(modifiedTime ? { modifiedTime } : {}),
       images: [
         {
           url: ogImage,

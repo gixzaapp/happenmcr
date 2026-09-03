@@ -3,8 +3,10 @@ import { buildEventPath, type Event } from "@happenmcr/types";
 import { getAllEvents, listIndexableCategories, listIndexableVenues } from "@/lib/api";
 import { getSiteUrl } from "@/lib/config";
 import { londonDateHorizon, londonYmd } from "@/lib/format";
+import { getLensPhotos } from "@/lib/lens-photos";
 import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
-import { MCR_ON_LENS_MAP_PATH, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
+import { MCR_HISTORY_PATH } from "@/lib/mcr-history";
+import { latestLensPhotoDate, MCR_ON_LENS_MAP_PATH, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
 
 /**
@@ -29,7 +31,11 @@ function latestEventDate(events: Event[], fallback: Date): Date {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const generatedAt = new Date();
-  const events = await getAllEvents({ cache: "no-store" });
+  const [events, lensPhotos] = await Promise.all([
+    getAllEvents({ cache: "no-store" }),
+    getLensPhotos(),
+  ]);
+  const lensLastMod = latestLensPhotoDate(lensPhotos) ?? generatedAt;
   const categories = listIndexableCategories(events);
   const venues = listIndexableVenues(events);
   const catalogLastMod = latestEventDate(events, generatedAt);
@@ -87,14 +93,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.75,
     },
     {
-      url: absoluteUrl(MCR_ON_LENS_PATH),
+      url: absoluteUrl(MCR_HISTORY_PATH),
       lastModified: generatedAt,
+      changeFrequency: "monthly",
+      priority: 0.65,
+    },
+    {
+      url: absoluteUrl(MCR_ON_LENS_PATH),
+      lastModified: lensLastMod,
       changeFrequency: "weekly",
       priority: 0.65,
     },
     {
       url: absoluteUrl(MCR_ON_LENS_MAP_PATH),
-      lastModified: generatedAt,
+      lastModified: lensLastMod,
       changeFrequency: "weekly",
       priority: 0.6,
     },

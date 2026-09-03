@@ -1,6 +1,12 @@
+import Link from "next/link";
 import { McrOnLensPhotoCard } from "@/components/mcr-on-lens/McrOnLensPhotoCard";
 import { McrOnLensUploadCta } from "@/components/mcr-on-lens/McrOnLensUploadLinks";
-import { lensPhotoToFeedCard, type LensPhoto } from "@/lib/mcr-on-lens";
+import {
+  lensPhotoToFeedCard,
+  MCR_ON_LENS_MAP_PATH,
+  MCR_ON_LENS_UPLOAD_PATH,
+  type LensPhoto,
+} from "@/lib/mcr-on-lens";
 
 type McrOnLensFeedProps = {
   photos: LensPhoto[];
@@ -16,7 +22,20 @@ export function McrOnLensFeed({ photos }: McrOnLensFeedProps) {
           Community feed
         </h2>
         <p className="text-label-md text-secondary">
-          Latest photos from Manchester
+          Latest photos from Manchester —{" "}
+          <Link
+            href={MCR_ON_LENS_MAP_PATH}
+            className="font-semibold text-industrial-black underline-offset-2 hover:underline"
+          >
+            view on the map
+          </Link>
+          {" · "}
+          <Link
+            href={MCR_ON_LENS_UPLOAD_PATH}
+            className="font-semibold text-industrial-black underline-offset-2 hover:underline"
+          >
+            upload yours
+          </Link>
         </p>
       </div>
 

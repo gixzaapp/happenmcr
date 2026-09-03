@@ -6,21 +6,20 @@ import { buildBreadcrumbJsonLd, homeBreadcrumb } from "@/lib/jsonld";
 import {
   MCR_ON_LENS_LABEL,
   MCR_ON_LENS_PATH,
+  MCR_ON_LENS_UPLOAD_DESCRIPTION,
+  MCR_ON_LENS_UPLOAD_KEYWORDS,
   MCR_ON_LENS_UPLOAD_PATH,
 } from "@/lib/mcr-on-lens";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, truncateSeoText } from "@/lib/seo";
 
+/** Utility upload form — discoverable via nav, not indexed as landing content. */
 export const metadata = buildPageMetadata({
   title: `Upload · ${MCR_ON_LENS_LABEL}`,
-  description:
-    "Upload a photo and share Manchester through your lens on HappenMCR.",
+  description: truncateSeoText(MCR_ON_LENS_UPLOAD_DESCRIPTION),
   path: MCR_ON_LENS_UPLOAD_PATH,
-  keywords: [
-    "MCR on Lens",
-    "upload photo Manchester",
-    "Manchester photography",
-    "HappenMCR",
-  ],
+  keywords: [...MCR_ON_LENS_UPLOAD_KEYWORDS],
+  index: false,
+  follow: true,
 });
 
 export default async function McrOnLensUploadPage() {

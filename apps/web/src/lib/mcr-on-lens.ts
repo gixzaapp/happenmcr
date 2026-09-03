@@ -55,6 +55,63 @@ export const MCR_ON_LENS_UPLOAD_PATH = `${MCR_ON_LENS_PATH}/upload`;
 export const MCR_ON_LENS_MAP_PATH = `${MCR_ON_LENS_PATH}/map`;
 export const MCR_ON_LENS_LABEL = "MCR on Lens";
 
+export const MCR_ON_LENS_HEADLINE = "MCR on Lens";
+
+export const MCR_ON_LENS_TAGLINE =
+  "See Manchester through the eyes of the community.";
+
+export const MCR_ON_LENS_DESCRIPTION =
+  "See Manchester through the eyes of the community — browse local photos, explore places on the map, and share your own view on HappenMCR.";
+
+export const MCR_ON_LENS_KEYWORDS = [
+  "MCR on Lens",
+  "Manchester photos",
+  "Manchester photography",
+  "community photography Manchester",
+  "Manchester photo map",
+  "Northern Quarter photos",
+  "Manchester community",
+  "MCR Buzz",
+  "HappenMCR",
+] as const;
+
+export const MCR_ON_LENS_MAP_DESCRIPTION =
+  "Explore community photos pinned across Manchester on the MCR on Lens map — neighbourhoods, landmarks, and everyday city life.";
+
+export const MCR_ON_LENS_MAP_KEYWORDS = [
+  "MCR on Lens map",
+  "Manchester photo map",
+  "Manchester map photos",
+  "Mapbox Manchester",
+  "Greater Manchester photography",
+  "MCR Buzz",
+  "HappenMCR",
+] as const;
+
+export const MCR_ON_LENS_UPLOAD_DESCRIPTION =
+  "Upload a photo and share Manchester through your lens — add a caption, location, and hashtags on HappenMCR.";
+
+export const MCR_ON_LENS_UPLOAD_KEYWORDS = [
+  "upload photo Manchester",
+  "MCR on Lens upload",
+  "share Manchester photo",
+  "Manchester photography",
+  "HappenMCR",
+] as const;
+
+/** Fallback share image when the feed has no uploads yet. */
+export const MCR_ON_LENS_OG_IMAGE = "/images/hero-manchester.webp";
+
+/** Latest upload timestamp — useful for sitemap lastmod. */
+export function latestLensPhotoDate(photos: LensPhoto[]): Date | null {
+  let latest = 0;
+  for (const photo of photos) {
+    const ms = new Date(photo.created_at).getTime();
+    if (Number.isFinite(ms) && ms > latest) latest = ms;
+  }
+  return latest > 0 ? new Date(latest) : null;
+}
+
 /** Map page URL that focuses a photo pin (when coords exist). */
 export function lensMapFocusUrl(
   card: Pick<LensFeedCard, "id" | "lat" | "lng">,

@@ -1,0 +1,1 @@
+export { ManchesterHistoryArticle } from "./ManchesterHistoryArticle";

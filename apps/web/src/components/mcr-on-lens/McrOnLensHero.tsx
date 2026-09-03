@@ -1,3 +1,8 @@
+import {
+  MCR_ON_LENS_HEADLINE,
+  MCR_ON_LENS_TAGLINE,
+} from "@/lib/mcr-on-lens";
+
 const ICONS = [
   { name: "photo_camera", label: "Capture", fill: 0 },
   { name: "location_on", label: "Places", fill: 0 },
@@ -14,10 +19,10 @@ export function McrOnLensHero() {
       />
       <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-industrial-black sm:text-4xl">
-          MCR on Lens
+          {MCR_ON_LENS_HEADLINE}
         </h1>
         <p className="mt-1.5 max-w-xl text-sm text-secondary sm:text-base">
-          See Manchester through the eyes of the community.
+          {MCR_ON_LENS_TAGLINE}
         </p>
         <div
           className="mt-3 flex items-center justify-center gap-6 sm:gap-8"

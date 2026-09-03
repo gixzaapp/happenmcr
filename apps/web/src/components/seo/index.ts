@@ -23,11 +23,17 @@ export {
   venueLinksFromEvents,
 } from "./internalLinks";
 export {
+  buildArticleJsonLd,
   buildBreadcrumbJsonLd,
+  buildCollectionPageJsonLd,
   buildEventItemListJsonLd,
   buildEventJsonLd,
+  buildLensPhotoItemListJsonLd,
   buildLocalBusinessJsonLd,
   buildOrganizationJsonLd,
   homeBreadcrumb,
+  type ArticleJsonLdOptions,
   type BreadcrumbItem,
+  type CollectionPageJsonLdOptions,
+  type LensPhotoJsonLdItem,
 } from "@/lib/jsonld";

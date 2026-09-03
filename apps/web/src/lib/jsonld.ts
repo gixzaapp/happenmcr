@@ -194,6 +194,186 @@ export function buildBreadcrumbJsonLd(
   };
 }
 
+export type ArticleJsonLdOptions = {
+  headline: string;
+  description: string;
+  path: string;
+  image?: string | string[];
+  datePublished?: string;
+  dateModified?: string;
+};
+
+/**
+ * schema.org Article JSON-LD for editorial MCR Buzz pages.
+ */
+export function buildArticleJsonLd(
+  options: ArticleJsonLdOptions,
+): Record<string, unknown> {
+  const siteUrl = getSiteUrl();
+  const pageUrl = toAbsoluteUrl(options.path);
+
+  const payload = prune({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${pageUrl}#article`,
+    headline: options.headline,
+    description: options.description,
+    image: options.image,
+    inLanguage: "en-GB",
+    author: {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: "HappenMCR",
+    },
+    publisher: {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: "HappenMCR",
+      logo: {
+        "@type": "ImageObject",
+        url: toAbsoluteUrl("/apple-icon"),
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": pageUrl,
+    },
+    isPartOf: {
+      "@type": "CollectionPage",
+      name: "MCR Buzz",
+      url: toAbsoluteUrl("/mcr-buzz"),
+    },
+    about: {
+      "@type": "City",
+      name: "Manchester",
+      containedInPlace: {
+        "@type": "AdministrativeArea",
+        name: "Greater Manchester",
+      },
+    },
+    datePublished: options.datePublished,
+    dateModified: options.dateModified ?? options.datePublished,
+  });
+
+  return payload ?? {};
+}
+
+export type CollectionPageJsonLdOptions = {
+  name: string;
+  description: string;
+  path: string;
+  isPartOf?: { name: string; path: string };
+};
+
+/**
+ * schema.org CollectionPage JSON-LD for MCR Buzz hubs (e.g. MCR on Lens feed).
+ */
+export function buildCollectionPageJsonLd(
+  options: CollectionPageJsonLdOptions,
+): Record<string, unknown> {
+  const pageUrl = toAbsoluteUrl(options.path);
+  const parent = options.isPartOf ?? { name: "MCR Buzz", path: "/mcr-buzz" };
+
+  const payload = prune({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${pageUrl}#webpage`,
+    name: options.name,
+    description: options.description,
+    url: pageUrl,
+    inLanguage: "en-GB",
+    isPartOf: {
+      "@type": "CollectionPage",
+      name: parent.name,
+      url: toAbsoluteUrl(parent.path),
+    },
+    about: {
+      "@type": "City",
+      name: "Manchester",
+      containedInPlace: {
+        "@type": "AdministrativeArea",
+        name: "Greater Manchester",
+      },
+    },
+  });
+
+  return payload ?? {};
+}
+
+export type LensPhotoJsonLdItem = {
+  id: string;
+  imageUrl: string;
+  name: string;
+  description?: string | null;
+  location?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+};
+
+/**
+ * schema.org ItemList of ImageObject nodes for the MCR on Lens photo catalog.
+ */
+export function buildLensPhotoItemListJsonLd(
+  photos: LensPhotoJsonLdItem[],
+  options: { name: string; path: string; description?: string },
+): Record<string, unknown> {
+  const listUrl = toAbsoluteUrl(options.path);
+  const items = photos.slice(0, 50).map((photo, index) => {
+    const imageNode = prune({
+      "@type": "ImageObject",
+      "@id": `${listUrl}#photo-${photo.id}`,
+      contentUrl: absoluteMaybeUrl(photo.imageUrl),
+      name: photo.name,
+      description: photo.description?.trim() || undefined,
+      contentLocation:
+        photo.lat != null &&
+        photo.lng != null &&
+        Number.isFinite(photo.lat) &&
+        Number.isFinite(photo.lng)
+          ? {
+              "@type": "Place",
+              name: photo.location?.trim() || "Manchester",
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: photo.lat,
+                longitude: photo.lng,
+              },
+            }
+          : photo.location?.trim()
+            ? {
+                "@type": "Place",
+                name: photo.location.trim(),
+              }
+            : undefined,
+    });
+
+    return {
+      "@type": "ListItem",
+      position: index + 1,
+      url: listUrl,
+      item: imageNode ?? {
+        "@type": "ImageObject",
+        contentUrl: absoluteMaybeUrl(photo.imageUrl),
+        name: photo.name,
+      },
+    };
+  });
+
+  const payload = prune({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${listUrl}#itemlist`,
+    name: options.name,
+    description: options.description,
+    numberOfItems: photos.length,
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    url: listUrl,
+    itemListElement: items,
+  });
+
+  return payload ?? {};
+}
+
 /** Nested Event node (no @context) for detail pages and ItemList items. */
 function buildEventNode(event: Event): { [key: string]: JsonLdValue | undefined } {
   const pageUrl = eventPageUrl(event);

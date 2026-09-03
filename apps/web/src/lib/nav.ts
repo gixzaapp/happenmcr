@@ -2,6 +2,7 @@ import {
   listMcrBuzzNavSections,
   mcrBuzzPath,
 } from "@/lib/mcr-buzz";
+import { MCR_HISTORY_LABEL, MCR_HISTORY_PATH } from "@/lib/mcr-history";
 import { MCR_ON_LENS_LABEL, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
 
 export type NavItem = {
@@ -30,6 +31,7 @@ export const mcrBuzzNav: NavDropdown = {
       href: mcrBuzzPath(section.slug),
       label: section.label,
     })),
+    { href: MCR_HISTORY_PATH, label: MCR_HISTORY_LABEL },
     { href: MCR_ON_LENS_PATH, label: MCR_ON_LENS_LABEL },
   ],
 };

@@ -12,6 +12,8 @@ import {
   mcrBuzzLabelList,
   mcrBuzzPath,
 } from "@/lib/mcr-buzz";
+import { MCR_HISTORY_LABEL, MCR_HISTORY_PATH } from "@/lib/mcr-history";
+import { MCR_ON_LENS_LABEL, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
 import { buildPageMetadata } from "@/lib/seo";
 
 /** Always fresh — avoid sticky empty ISR after deploy/ingest. */
@@ -82,6 +84,48 @@ export default async function McrBuzzHubPage() {
           );
         })}
       </ul>
+
+      <section className="mt-12 border-t border-industrial-black/10 pt-10">
+        <h2 className="font-display text-xl font-bold text-industrial-black">
+          Stories &amp; community
+        </h2>
+        <ul className="mt-6 grid gap-8 sm:grid-cols-2">
+          <li>
+            <Link
+              href={MCR_HISTORY_PATH}
+              className="group block transition hover:opacity-90"
+            >
+              <h3 className="font-display text-2xl font-bold text-industrial-black group-hover:underline">
+                {MCR_HISTORY_LABEL}
+              </h3>
+              <p className="mt-2 text-sm text-secondary">
+                From Roman Mamucium to Cottonopolis — how Manchester became the
+                world&apos;s first industrial city, and reinvented itself again.
+              </p>
+              <p className="mt-3 text-sm font-semibold text-industrial-black">
+                Read the story →
+              </p>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={MCR_ON_LENS_PATH}
+              className="group block transition hover:opacity-90"
+            >
+              <h3 className="font-display text-2xl font-bold text-industrial-black group-hover:underline">
+                {MCR_ON_LENS_LABEL}
+              </h3>
+              <p className="mt-2 text-sm text-secondary">
+                See Manchester through the community lens — photos, places, and
+                people.
+              </p>
+              <p className="mt-3 text-sm font-semibold text-industrial-black">
+                View the feed →
+              </p>
+            </Link>
+          </li>
+        </ul>
+      </section>
 
       <p className="mt-12 text-sm text-secondary">
         Organising something local?{" "}
