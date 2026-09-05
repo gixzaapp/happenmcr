@@ -5,6 +5,7 @@ import { buildCategoryPath, buildVenuePath } from "@happenmcr/types";
 import { eventImageAlt } from "@/lib/a11y";
 import { eventMediaPath } from "@/lib/event-media";
 import { formatEventDateLong } from "@/lib/format";
+import { withSkiddleTag } from "@/lib/skiddle";
 import { shouldUseSymbolicEventImage } from "@/lib/source";
 import { EventBackButton } from "./EventBackButton";
 import { EventSymbolicPoster } from "./EventSymbolicPoster";
@@ -27,6 +28,7 @@ export function EventDetail({ event }: EventDetailProps) {
     ? buildVenuePath(event.venue_name)
     : null;
   const primaryUrl = event.ticket_url || event.source_url;
+  const ticketHref = primaryUrl ? withSkiddleTag(primaryUrl) : null;
   const useSymbolic = shouldUseSymbolicEventImage(
     event.source,
     event.image_url,
@@ -146,9 +148,9 @@ export function EventDetail({ event }: EventDetailProps) {
         ) : null}
 
         <div className="mt-10 flex flex-wrap gap-3">
-          {primaryUrl ? (
+          {ticketHref ? (
             <a
-              href={primaryUrl}
+              href={ticketHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center rounded-md bg-[color:var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"

@@ -7,6 +7,7 @@
     "build": "prisma generate --schema=../api/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "tsx --test src/lib/skiddle.test.ts",
     "clean": "rimraf .next",
     "db:generate": "prisma generate --schema=../api/prisma/schema.prisma"
   },
@@ -32,6 +33,7 @@
     "prisma": "^6.19.3",
     "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.8",
     "typescript": "^5.8.3"
   }
 }
