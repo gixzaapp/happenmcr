@@ -11,6 +11,8 @@ export {
   DEFAULT_OG_IMAGE_PATH,
   HOME_TITLE,
   SITE_NAME,
+  WHATS_ON_MANCHESTER_PATH,
+  WHATS_ON_MANCHESTER_TITLE,
   type PageSeoOptions,
 } from "@/lib/seo";
 export { JsonLd } from "./JsonLd";

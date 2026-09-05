@@ -5,17 +5,30 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 type McrOnLensPhotoLightboxProps = {
   imageUrl: string;
   title: string;
-  children: ReactNode;
+  /** Feed-card trigger. Omit when controlling open from outside (e.g. map). */
+  children?: ReactNode;
+  /** Controlled open state — used by the map popover. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function McrOnLensPhotoLightbox({
   imageUrl,
   title,
   children,
+  open: openProp,
+  onOpenChange,
 }: McrOnLensPhotoLightboxProps) {
   const dialogTitleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : uncontrolledOpen;
+
+  function setOpen(next: boolean) {
+    if (!controlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -35,14 +48,16 @@ export function McrOnLensPhotoLightbox({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="relative block w-full cursor-zoom-in overflow-hidden bg-industrial-black text-left"
-        aria-label={`Open ${title}`}
-      >
-        {children}
-      </button>
+      {children ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="relative block w-full cursor-zoom-in overflow-hidden bg-industrial-black text-left"
+          aria-label={`Open ${title}`}
+        >
+          {children}
+        </button>
+      ) : null}
 
       <dialog
         ref={dialogRef}

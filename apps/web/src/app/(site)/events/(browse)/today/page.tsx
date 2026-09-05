@@ -17,22 +17,10 @@ export const revalidate = REVALIDATE_SECONDS;
 const PATH = "/events/today";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const events = await getTodayEvents();
-  const dayLabel = formatLondonDay();
-  const count = events.length;
-  const countLabel =
-    count === 0
-      ? "Find what's on"
-      : count === 1
-        ? "1 event on"
-        : `${count} events on`;
-
-  const title = `Manchester Events Today — What's On ${dayLabel}`;
-  const description = `Find events in Manchester today (${dayLabel}). ${countLabel} listed — concerts, gigs, nightlife, food, and more on HappenMCR.`;
-
   return buildPageMetadata({
-    title,
-    description,
+    title: "Manchester Events Today",
+    description:
+      "Find events in Manchester today — concerts, gigs, nightlife, food, and more. Updated throughout the day on HappenMCR.",
     path: PATH,
     keywords: [
       "Manchester events today",

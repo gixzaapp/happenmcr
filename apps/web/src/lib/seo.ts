@@ -10,9 +10,26 @@ export const DEFAULT_DESCRIPTION =
 export const HOME_TITLE =
   "Manchester Events | Gigs, Nightlife & What's On – HappenMCR";
 
+/** Dedicated landing for the exact query “What's On in Manchester”. */
+export const WHATS_ON_MANCHESTER_PATH = "/whats-on-manchester";
+export const WHATS_ON_MANCHESTER_TITLE = "What's On in Manchester";
+export const WHATS_ON_MANCHESTER_DESCRIPTION =
+  "What's on in Manchester — find today's gigs, nightlife, free events, festivals, and weekend plans. Updated daily on HappenMCR.";
+export const WHATS_ON_MANCHESTER_KEYWORDS = [
+  "What's On in Manchester",
+  "whats on in Manchester",
+  "what's on Manchester",
+  "Manchester events",
+  "Manchester events today",
+  "Manchester gigs",
+  "Manchester nightlife",
+  "HappenMCR",
+] as const;
+
 /** High-intent phrases people search — keep aligned with on-page copy. */
 export const DEFAULT_KEYWORDS = [
   "Manchester events",
+  "What's On in Manchester",
   "Manchester events today",
   "events in Manchester today",
   "what's on Manchester",

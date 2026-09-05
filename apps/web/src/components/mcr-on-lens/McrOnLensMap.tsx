@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { McrOnLensPhotoLightbox } from "@/components/mcr-on-lens/McrOnLensPhotoLightbox";
 import type { LensMapPin } from "@/lib/mcr-on-lens";
 
 const MANCHESTER_CENTER: [number, number] = [-2.244644, 53.480759];
@@ -27,6 +28,7 @@ export function McrOnLensMap({ accessToken, pins, focus }: McrOnLensMapProps) {
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lightboxPin, setLightboxPin] = useState<LensMapPin | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -91,15 +93,30 @@ export function McrOnLensMap({ accessToken, pins, focus }: McrOnLensMapProps) {
 
       const popup = new mapboxgl.Popup({ offset: 28, maxWidth: "240px" }).setHTML(
         [
-          `<div style="font-family:inherit">`,
-          `<img src="${escapeHtml(pin.imageUrl)}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;display:block" />`,
+          `<button type="button" data-lens-enlarge style="display:block;width:100%;padding:0;border:0;background:transparent;cursor:zoom-in;text-align:left;font-family:inherit">`,
+          `<img src="${escapeHtml(pin.imageUrl)}" alt="${escapeHtml(pin.title)}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;display:block" />`,
           `<p style="margin:8px 0 0;font-weight:700;font-size:14px;color:#1a1a1a">${escapeHtml(pin.title)}</p>`,
           pin.location
             ? `<p style="margin:4px 0 0;font-size:12px;color:#5f5e5e">${escapeHtml(pin.location)}</p>`
             : "",
-          `</div>`,
+          `<p style="margin:8px 0 0;font-size:11px;font-weight:600;color:#8a6d00">Tap to enlarge</p>`,
+          `</button>`,
         ].join(""),
       );
+
+      const onPopupOpen = () => {
+        const root = popup.getElement();
+        const trigger = root?.querySelector<HTMLElement>("[data-lens-enlarge]");
+        if (!trigger) return;
+
+        trigger.onclick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setLightboxPin(pin);
+        };
+      };
+
+      popup.on("open", onPopupOpen);
 
       const marker = new mapboxgl.Marker({ element: el })
         .setLngLat([pin.lng, pin.lat])
@@ -152,6 +169,17 @@ export function McrOnLensMap({ accessToken, pins, focus }: McrOnLensMapProps) {
           No geotagged uploads yet — add a location when you upload to pin photos
           here.
         </div>
+      ) : null}
+
+      {lightboxPin ? (
+        <McrOnLensPhotoLightbox
+          imageUrl={lightboxPin.imageUrl}
+          title={lightboxPin.title}
+          open
+          onOpenChange={(next) => {
+            if (!next) setLightboxPin(null);
+          }}
+        />
       ) : null}
     </div>
   );

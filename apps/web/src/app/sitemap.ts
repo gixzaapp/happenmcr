@@ -1,13 +1,18 @@
 import type { MetadataRoute } from "next";
-import { buildEventPath, type Event } from "@happenmcr/types";
+import { buildEventPath, getEventCategory, type Event } from "@happenmcr/types";
 import { getAllEvents, listIndexableCategories, listIndexableVenues } from "@/lib/api";
 import { getSiteUrl } from "@/lib/config";
 import { londonDateHorizon, londonYmd } from "@/lib/format";
 import { getLensPhotos } from "@/lib/lens-photos";
 import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
-import { MCR_HISTORY_PATH } from "@/lib/mcr-history";
-import { latestLensPhotoDate, MCR_ON_LENS_MAP_PATH, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
+import { MCR_HISTORY_PATH, MCR_HISTORY_PUBLISHED } from "@/lib/mcr-history";
+import {
+  latestLensPhotoDate,
+  MCR_ON_LENS_MAP_PATH,
+  MCR_ON_LENS_PATH,
+} from "@/lib/mcr-on-lens";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
+import { WHATS_ON_MANCHESTER_PATH } from "@/lib/seo";
 
 /**
  * Regenerate sitemap hourly from live API data so <lastmod> tracks content
@@ -15,11 +20,27 @@ import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
  */
 export const revalidate = 3_600;
 
+/**
+ * Intentionally omitted (noindex / utility — do not add):
+ * - /search
+ * - /login
+ * - /mcr-buzz/mcr-on-lens/upload
+ * - /getmethevisitorcount
+ * - /auth/*
+ */
+const EVENTS_TODAY_PATH = "/events/today";
+const EVENTS_WEEKEND_PATH = "/events/weekend";
+const EVENTS_FREE_PATH = "/events/free";
+const COMMUNITY_PATH = "/community";
+const SUBMIT_EVENT_PATH = "/submit-event";
+const MCR_BUZZ_HUB_PATH = "/mcr-buzz";
+const PRIVACY_PATH = "/privacy";
+
 function absoluteUrl(path: string): string {
   return new URL(path.startsWith("/") ? path : `/${path}`, getSiteUrl()).toString();
 }
 
-/** Latest event start among a set — used as listing-page lastmod signal. */
+/** Latest event start among a set — used for category/venue/date lastmod. */
 function latestEventDate(events: Event[], fallback: Date): Date {
   let latest = 0;
   for (const event of events) {
@@ -27,6 +48,25 @@ function latestEventDate(events: Event[], fallback: Date): Date {
     if (Number.isFinite(ms) && ms > latest) latest = ms;
   }
   return latest > 0 ? new Date(latest) : fallback;
+}
+
+function historyLastModified(fallback: Date): Date {
+  const published = new Date(`${MCR_HISTORY_PUBLISHED}T00:00:00.000Z`);
+  return Number.isNaN(published.getTime()) ? fallback : published;
+}
+
+/** Group upcoming events by curated category id (live-music, nightlife, …). */
+function eventsByCuratedCategory(events: Event[]): Map<string, Event[]> {
+  const bySlug = new Map<string, Event[]>();
+  for (const event of events) {
+    if (!event.category) continue;
+    const curated = getEventCategory(event.category);
+    if (!curated || curated.id === "other") continue;
+    const list = bySlug.get(curated.id);
+    if (list) list.push(event);
+    else bySlug.set(curated.id, [event]);
+  }
+  return bySlug;
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -39,62 +79,68 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const categories = listIndexableCategories(events);
   const venues = listIndexableVenues(events);
   const catalogLastMod = latestEventDate(events, generatedAt);
+  const historyLastMod = historyLastModified(generatedAt);
+  const categoryEventMap = eventsByCuratedCategory(events);
 
   const todayYmd = londonYmd();
-  const todayEvents = events.filter((event) => {
-    const start = new Date(event.start_time);
-    if (Number.isNaN(start.getTime())) return false;
-    return londonYmd(start) === todayYmd;
-  });
-  const freeEvents = events.filter((event) => event.is_free);
 
+  /**
+   * Hub / browse pages use sitemap generation time as lastmod.
+   * Avoid event start times here — they can surface as stale “X days ago”
+   * signals in Google SERPs for evergreen listing URLs.
+   */
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: absoluteUrl("/"),
-      lastModified: catalogLastMod,
+      lastModified: generatedAt,
       changeFrequency: "daily",
       priority: 1,
     },
     {
-      url: absoluteUrl("/events/today"),
-      lastModified: latestEventDate(todayEvents, generatedAt),
+      url: absoluteUrl(WHATS_ON_MANCHESTER_PATH),
+      lastModified: generatedAt,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+    {
+      url: absoluteUrl(EVENTS_TODAY_PATH),
+      lastModified: generatedAt,
       changeFrequency: "hourly",
       priority: 0.95,
     },
     {
-      url: absoluteUrl("/events/weekend"),
-      lastModified: catalogLastMod,
+      url: absoluteUrl(EVENTS_WEEKEND_PATH),
+      lastModified: generatedAt,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: absoluteUrl("/events/free"),
-      lastModified: latestEventDate(freeEvents, generatedAt),
+      url: absoluteUrl(EVENTS_FREE_PATH),
+      lastModified: generatedAt,
       changeFrequency: "daily",
       priority: 0.85,
     },
     {
-      url: absoluteUrl("/community"),
+      url: absoluteUrl(COMMUNITY_PATH),
       lastModified: generatedAt,
       changeFrequency: "weekly",
       priority: 0.7,
     },
-    // /search is noindex (tool page) — omit from sitemap.
     {
-      url: absoluteUrl("/submit-event"),
+      url: absoluteUrl(SUBMIT_EVENT_PATH),
       lastModified: generatedAt,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: absoluteUrl("/mcr-buzz"),
-      lastModified: catalogLastMod,
+      url: absoluteUrl(MCR_BUZZ_HUB_PATH),
+      lastModified: generatedAt,
       changeFrequency: "daily",
       priority: 0.75,
     },
     {
       url: absoluteUrl(MCR_HISTORY_PATH),
-      lastModified: generatedAt,
+      lastModified: historyLastMod,
       changeFrequency: "monthly",
       priority: 0.65,
     },
@@ -111,7 +157,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
-      url: absoluteUrl("/privacy"),
+      url: absoluteUrl(PRIVACY_PATH),
       lastModified: generatedAt,
       changeFrequency: "yearly",
       priority: 0.2,
@@ -121,7 +167,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const mcrBuzzPages: MetadataRoute.Sitemap = listMcrBuzzSections().map(
     (section) => ({
       url: absoluteUrl(mcrBuzzPath(section.slug)),
-      lastModified: catalogLastMod,
+      lastModified: generatedAt,
       changeFrequency: "daily" as const,
       priority: 0.7,
     }),
@@ -156,7 +202,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
     url: absoluteUrl(`/category/${category.slug}`),
-    lastModified: catalogLastMod,
+    lastModified: latestEventDate(
+      categoryEventMap.get(category.slug) ?? [],
+      generatedAt,
+    ),
     changeFrequency: "daily" as const,
     priority: 0.7,
   }));

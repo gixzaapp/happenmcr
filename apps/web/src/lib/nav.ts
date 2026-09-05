@@ -44,6 +44,7 @@ export const timingNav: NavItem[] = [
 ];
 
 export const footerNav: NavItem[] = [
+  { href: "/whats-on-manchester", label: "What's On" },
   ...timingNav,
   { href: "/mcr-buzz", label: "MCR Buzz" },
   { href: "/search", label: "Search" },

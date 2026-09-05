@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const LINKS = [
+  { href: "/whats-on-manchester", label: "What's on in Manchester" },
   { href: "/category/live-music", label: "Live music Manchester" },
   { href: "/category/nightlife", label: "Nightlife & club nights" },
   { href: "/events/free", label: "Free Manchester events" },
