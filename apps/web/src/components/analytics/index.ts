@@ -3,3 +3,4 @@ export {
   GoogleTagManagerNoscript,
   getGtmId,
 } from "./GoogleTagManager";
+export { GoogleAdSense, getAdSenseClient } from "./GoogleAdSense";
