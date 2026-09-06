@@ -4,6 +4,7 @@ import {
   GoogleAdSense,
   GoogleTagManager,
   GoogleTagManagerNoscript,
+  getAdSenseClient,
 } from "@/components/analytics";
 import { getSiteUrl } from "@/lib/config";
 import {
@@ -31,6 +32,8 @@ const sans = Inter({
   preload: true,
   adjustFontFallback: true,
 });
+
+const adsenseClient = getAdSenseClient();
 
 /**
  * Site-wide defaults only. Per-page `buildPageMetadata` sets title, description,
@@ -68,6 +71,10 @@ export const metadata: Metadata = {
     description: DEFAULT_DESCRIPTION,
     images: ["/opengraph-image"],
   },
+  // AdSense “Meta tag” verification — reliable with App Router (unlike next/script).
+  ...(adsenseClient
+    ? { other: { "google-adsense-account": adsenseClient } }
+    : {}),
 };
 
 export default function RootLayout({

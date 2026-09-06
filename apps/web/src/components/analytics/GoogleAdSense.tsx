@@ -1,31 +1,35 @@
-import Script from "next/script";
+/**
+ * HappenMCR AdSense publisher id — matches the Google AdSense dashboard snippet.
+ * Optional override: NEXT_PUBLIC_ADSENSE_CLIENT
+ */
+export const ADSENSE_CLIENT =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim() ||
+  "ca-pub-4393888257507260";
 
-/** Public AdSense publisher id, e.g. ca-pub-XXXXXXXX. Empty = AdSense off. */
 export function getAdSenseClient(): string | null {
-  const raw =
-    process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim() ||
-    "ca-pub-4393888257507260";
-  if (!/^ca-pub-\d+$/i.test(raw)) {
+  if (!/^ca-pub-\d+$/i.test(ADSENSE_CLIENT)) {
     console.warn(
-      `[adsense] NEXT_PUBLIC_ADSENSE_CLIENT looks invalid (“${raw}”). Expected ca-pub-XXXXXXXX.`,
+      `[adsense] Invalid publisher id (“${ADSENSE_CLIENT}”). Expected ca-pub-XXXXXXXX.`,
     );
     return null;
   }
-  return raw;
+  return ADSENSE_CLIENT;
 }
 
-/** Google AdSense loader — sitewide verification + future ad units. */
+/**
+ * Exact AdSense head snippet Google provides for site verification.
+ * Do NOT use next/script here — it rewrites to __next_s.push(...) and
+ * AdSense’s crawler will not accept that as the verification script.
+ */
 export function GoogleAdSense() {
   const client = getAdSenseClient();
   if (!client) return null;
 
   return (
-    <Script
-      id="google-adsense"
+    <script
       async
       src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
       crossOrigin="anonymous"
-      strategy="beforeInteractive"
     />
   );
 }
