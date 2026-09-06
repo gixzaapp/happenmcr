@@ -1,3 +1,4 @@
+import { AdSenseInFeed } from "@/components/analytics";
 import type { Event } from "@happenmcr/types";
 import {
   EventCard,
@@ -15,9 +16,17 @@ export type EventListProps = {
   emptyMessage?: string;
   className?: string;
   "aria-label"?: string;
-  /** Card title heading level. Use 3 when the list sits under an h2. */
+  /** Heading level for card titles. */
   titleAs?: "h2" | "h3";
+  /**
+   * Insert an AdSense in-feed unit after every N cards.
+   * Set `0` to disable. Default: 6 (≈2 desktop rows).
+   */
+  adEvery?: number;
 };
+
+/** Place first in-feed ad after this many cards (then every `adEvery`). */
+const AD_FIRST_AFTER = 3;
 
 function isApiEvent(event: EventListItem | Event): event is Event {
   return "start_time" in event && "venue_name" in event;
@@ -35,12 +44,25 @@ function itemKey(event: EventListItem | Event, index: number): string {
   return `${card.title}-${date}-${index}`;
 }
 
+function shouldInsertAd(
+  index: number,
+  total: number,
+  adEvery: number,
+): boolean {
+  if (adEvery <= 0 || total < AD_FIRST_AFTER) return false;
+  const position = index + 1;
+  if (position === AD_FIRST_AFTER) return true;
+  if (position <= AD_FIRST_AFTER) return false;
+  return (position - AD_FIRST_AFTER) % adEvery === 0 && position < total;
+}
+
 export function EventList({
   events,
   emptyMessage = "No events to show.",
   className = "",
   "aria-label": ariaLabel = "Events",
   titleAs = "h2",
+  adEvery = 6,
 }: EventListProps) {
   if (events.length === 0) {
     return (
@@ -58,13 +80,23 @@ export function EventList({
       aria-label={ariaLabel}
       className={`grid list-none gap-8 p-0 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
     >
-      {events.map((event, index) => {
+      {events.flatMap((event, index) => {
         const props = toCardProps(event);
-        return (
+        const nodes = [
           <li key={itemKey(event, index)} className="min-w-0">
             <EventCard {...props} titleAs={titleAs} />
-          </li>
-        );
+          </li>,
+        ];
+
+        if (shouldInsertAd(index, events.length, adEvery)) {
+          nodes.push(
+            <li key={`adsense-infeed-${index}`} className="min-w-0">
+              <AdSenseInFeed />
+            </li>,
+          );
+        }
+
+        return nodes;
       })}
     </ul>
   );
