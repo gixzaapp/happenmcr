@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import {
   GoogleAdSense,
+  GoogleAnalytics,
   GoogleTagManager,
   GoogleTagManagerNoscript,
   getAdSenseClient,
@@ -86,6 +87,7 @@ export default function RootLayout({
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <head>
         <GoogleTagManager />
+        <GoogleAnalytics />
         <GoogleAdSense />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

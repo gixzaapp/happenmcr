@@ -4,6 +4,11 @@ export {
   getGtmId,
 } from "./GoogleTagManager";
 export {
+  GoogleAnalytics,
+  GA_MEASUREMENT_ID,
+  getGaMeasurementId,
+} from "./GoogleAnalytics";
+export {
   ADSENSE_CLIENT,
   GoogleAdSense,
   getAdSenseClient,

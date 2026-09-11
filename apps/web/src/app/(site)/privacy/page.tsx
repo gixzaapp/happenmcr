@@ -63,7 +63,7 @@ const sections = [
     title: "Cookies and analytics",
     body: [
       "We may use essential cookies needed for the site to work, and optional analytics cookies to understand traffic and improve the product.",
-      "When configured, we use Google Tag Manager to load analytics tools such as Google Analytics. Those services may set cookies or similar technologies and process usage data according to Google’s policies.",
+      "When configured, we use Google Analytics (and optionally Google Tag Manager) to understand traffic. Those services may set cookies or similar technologies and process usage data according to Google’s policies.",
       "You can control cookies through your browser settings. Blocking some cookies may affect site features.",
     ],
   },
