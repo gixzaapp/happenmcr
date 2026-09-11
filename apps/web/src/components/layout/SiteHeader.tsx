@@ -1,6 +1,7 @@
 "use client";
 
 import { HeaderAuth } from "@/components/auth/HeaderAuth";
+import { trackEvent } from "@/components/analytics";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -15,6 +16,7 @@ function HeaderSearchField() {
   function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q = query.trim();
+    trackEvent("search", { search_query: q || "(empty)" });
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
   }
 

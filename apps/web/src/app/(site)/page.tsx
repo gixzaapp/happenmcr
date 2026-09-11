@@ -1,3 +1,4 @@
+import { ScrollDepthTracker } from "@/components/analytics";
 import {
   ChooseVibe,
   FeaturedDiscovery,
@@ -128,6 +129,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <ScrollDepthTracker />
       <JsonLd data={buildOrganizationJsonLd()} />
       <JsonLd data={buildLocalBusinessJsonLd()} />
       <HomeHero todayEvents={todayEvents} />

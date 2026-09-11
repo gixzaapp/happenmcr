@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { trackEvent } from "@/components/analytics";
 
 type SearchFormProps = {
   initialQuery?: string;
@@ -17,11 +18,17 @@ export function SearchForm({
     setQuery(initialQuery);
   }, [initialQuery]);
 
+  function onSubmit(_event: FormEvent<HTMLFormElement>) {
+    const q = query.trim();
+    trackEvent("search", { search_query: q || "(empty)" });
+  }
+
   return (
     <form
       action="/search"
       method="get"
       role="search"
+      onSubmit={onSubmit}
       className="flex w-full flex-col gap-3 sm:flex-row"
     >
       <label className="sr-only" htmlFor="search-q">

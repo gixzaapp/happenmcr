@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { Event } from "@happenmcr/types";
+import { TrackedLink } from "@/components/analytics";
 import { timingNav } from "@/lib/nav";
 import { HappeningToday } from "./HappeningToday";
 
@@ -10,6 +10,12 @@ const timingIcons: Record<string, string> = {
   Today: "today",
   Weekend: "date_range",
   Free: "sell",
+};
+
+const filterParamByLabel: Record<string, "today" | "weekend" | "free"> = {
+  Today: "today",
+  Weekend: "weekend",
+  Free: "free",
 };
 
 type HomeHeroProps = {
@@ -48,25 +54,30 @@ export function HomeHero({ todayEvents = [] }: HomeHeroProps) {
             aria-label="Browse by when"
             className="mb-stack-md flex flex-wrap gap-3"
           >
-            {timingNav.map((item, index) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`hard-shadow inline-flex items-center gap-2 px-5 py-3 font-display text-sm font-extrabold uppercase tracking-widest transition duration-200 hover:-translate-y-0.5 hover:scale-[1.03] ${
-                  index === 0
-                    ? "bg-bee-yellow text-industrial-black"
-                    : "border-2 border-bee-yellow bg-industrial-black/70 text-bee-yellow backdrop-blur-sm hover:bg-bee-yellow hover:text-industrial-black"
-                }`}
-              >
-                <span
-                  className="material-symbols-outlined text-[1.25rem]"
-                  aria-hidden
+            {timingNav.map((item, index) => {
+              const filter = filterParamByLabel[item.label] ?? item.label.toLowerCase();
+              return (
+                <TrackedLink
+                  key={item.href}
+                  href={item.href}
+                  eventName="filter_click"
+                  eventParams={{ filter }}
+                  className={`hard-shadow inline-flex items-center gap-2 px-5 py-3 font-display text-sm font-extrabold uppercase tracking-widest transition duration-200 hover:-translate-y-0.5 hover:scale-[1.03] ${
+                    index === 0
+                      ? "bg-bee-yellow text-industrial-black"
+                      : "border-2 border-bee-yellow bg-industrial-black/70 text-bee-yellow backdrop-blur-sm hover:bg-bee-yellow hover:text-industrial-black"
+                  }`}
                 >
-                  {timingIcons[item.label] ?? "event"}
-                </span>
-                {item.label}
-              </Link>
-            ))}
+                  <span
+                    className="material-symbols-outlined text-[1.25rem]"
+                    aria-hidden
+                  >
+                    {timingIcons[item.label] ?? "event"}
+                  </span>
+                  {item.label}
+                </TrackedLink>
+              );
+            })}
           </nav>
 
           <p className="mb-stack-md max-w-lg text-body-lg text-canvas-white/80">
@@ -75,21 +86,23 @@ export function HomeHero({ todayEvents = [] }: HomeHeroProps) {
             it&apos;s happening, it&apos;s here.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Link
+            <TrackedLink
               href="/category/live-music"
+              eventName="explore_gigs_click"
               className="hard-shadow inline-flex items-center gap-2 rounded-lg bg-bee-yellow px-8 py-4 font-display text-headline-sm text-industrial-black"
             >
               Explore Gigs
               <span className="material-symbols-outlined" aria-hidden>
                 arrow_forward
               </span>
-            </Link>
-            <Link
+            </TrackedLink>
+            <TrackedLink
               href="/submit-event"
+              eventName="submit_event_click"
               className="inline-flex items-center rounded-lg border-2 border-canvas-white px-8 py-4 font-display text-headline-sm text-canvas-white transition-colors hover:bg-canvas-white hover:text-industrial-black"
             >
               Submit Event
-            </Link>
+            </TrackedLink>
           </div>
         </div>
 

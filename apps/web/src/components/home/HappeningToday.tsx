@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildEventPath, type Event } from "@happenmcr/types";
+import { trackEvent } from "@/components/analytics";
 import { EventSymbolicPoster } from "@/components/events/EventSymbolicPoster";
 import { formatEventDate } from "@/lib/format";
 import { shouldUseSymbolicEventImage } from "@/lib/source";
@@ -126,7 +127,11 @@ export function HappeningToday({ events }: HappeningTodayProps) {
       {events.length === 0 ? (
         <p className="text-sm text-secondary-fixed-dim">
           No events listed for today yet.{" "}
-          <Link href="/events/weekend" className="underline">
+          <Link
+            href="/events/weekend"
+            className="underline"
+            onClick={() => trackEvent("filter_click", { filter: "weekend" })}
+          >
             See the weekend
           </Link>
           .
@@ -151,6 +156,12 @@ export function HappeningToday({ events }: HappeningTodayProps) {
                     className={`group flex items-center gap-4 rounded-lg p-2 transition-colors hover:bg-canvas-white/10 ${
                       index > 0 ? "border-t border-canvas-white/5 pt-3" : ""
                     }`}
+                    onClick={() =>
+                      trackEvent("event_card_click", {
+                        eventId: event.id,
+                        eventName: event.title,
+                      })
+                    }
                   >
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded bg-industrial-black">
                       {shouldUseSymbolicEventImage(
@@ -204,6 +215,7 @@ export function HappeningToday({ events }: HappeningTodayProps) {
         <Link
           href="/events/today"
           className="inline-flex text-xs font-semibold uppercase tracking-widest text-bee-yellow hover:underline"
+          onClick={() => trackEvent("filter_click", { filter: "today" })}
         >
           View all today
         </Link>

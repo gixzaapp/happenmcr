@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import { buildEventPath, type Event } from "@happenmcr/types";
+import { TrackedLink } from "@/components/analytics";
 import { EventSymbolicPoster } from "@/components/events/EventSymbolicPoster";
 import { formatEventDate } from "@/lib/format";
 import { shouldUseSymbolicEventImage } from "@/lib/source";
@@ -43,18 +43,22 @@ export function FeaturedDiscovery({ events = [] }: FeaturedDiscoveryProps) {
             Hand-picked Manchester experiences for this week.
           </p>
         </div>
-        <Link
+        <TrackedLink
           href="/events/weekend"
+          eventName="filter_click"
+          eventParams={{ filter: "weekend" }}
           className="hidden items-center gap-2 border-b-2 border-bee-yellow pb-1 text-label-md text-industrial-black transition-all hover:border-industrial-black md:flex"
         >
           VIEW ALL EVENTS
           <span className="material-symbols-outlined text-sm">open_in_new</span>
-        </Link>
+        </TrackedLink>
       </div>
 
       <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-        <Link
+        <TrackedLink
           href={buildEventPath(featured)}
+          eventName="event_card_click"
+          eventParams={{ eventId: featured.id, eventName: featured.title }}
           className="group relative h-[500px] overflow-hidden rounded-xl md:col-span-2"
         >
           {featuredSymbolic ? (
@@ -109,7 +113,7 @@ export function FeaturedDiscovery({ events = [] }: FeaturedDiscoveryProps) {
               ) : null}
             </div>
           </div>
-        </Link>
+        </TrackedLink>
 
         <div className="space-y-gutter">
           {sideEvents.map((event, index) => {
@@ -119,9 +123,11 @@ export function FeaturedDiscovery({ events = [] }: FeaturedDiscoveryProps) {
               event.image_url,
             );
             return (
-              <Link
+              <TrackedLink
                 key={event.id}
                 href={buildEventPath(event)}
+                eventName="event_card_click"
+                eventParams={{ eventId: event.id, eventName: event.title }}
                 className={`group block h-[calc(250px-0.75rem)] overflow-hidden rounded-xl border transition-colors ${
                   dark
                     ? "border-transparent bg-industrial-black"
@@ -179,7 +185,7 @@ export function FeaturedDiscovery({ events = [] }: FeaturedDiscoveryProps) {
                       }`}
                   </p>
                 </div>
-              </Link>
+              </TrackedLink>
             );
           })}
         </div>

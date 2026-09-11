@@ -1,6 +1,7 @@
 "use client";
 
 import { MobileHeaderAuth } from "@/components/auth/HeaderAuth";
+import { trackEvent } from "@/components/analytics";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -20,6 +21,7 @@ function MobileSearchField({ onSubmitted }: { onSubmitted: () => void }) {
   function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q = query.trim();
+    trackEvent("search", { search_query: q || "(empty)" });
     onSubmitted();
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
   }
