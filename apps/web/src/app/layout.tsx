@@ -5,8 +5,10 @@ import {
   GoogleAnalytics,
   GoogleTagManager,
   GoogleTagManagerNoscript,
+  UniqueVisitBeacon,
   getAdSenseClient,
 } from "@/components/analytics";
+import { Suspense } from "react";
 import { getSiteUrl } from "@/lib/config";
 import {
   DEFAULT_DESCRIPTION,
@@ -102,6 +104,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen font-sans">
         <GoogleTagManagerNoscript />
+        <Suspense fallback={null}>
+          <UniqueVisitBeacon />
+        </Suspense>
         {children}
       </body>
     </html>

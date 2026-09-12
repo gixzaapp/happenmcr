@@ -21,3 +21,4 @@ export {
 export { trackEvent } from "./track";
 export { TrackedLink } from "./TrackedLink";
 export { ScrollDepthTracker } from "./ScrollDepthTracker";
+export { UniqueVisitBeacon } from "./UniqueVisitBeacon";

@@ -71,7 +71,7 @@ export default async function VisitorCountPage() {
       }}
     >
       <div style={{ textAlign: "center" }}>
-        <p style={{ opacity: 0.6, marginBottom: 8 }}>unique visitors today</p>
+        <p style={{ opacity: 0.6, marginBottom: 8 }}>unique browsers today (JS)</p>
         <p style={{ fontSize: "4rem", margin: 0, fontWeight: 700 }}>
           {stats ? stats.uniqueToday.toLocaleString("en-GB") : "—"}
         </p>

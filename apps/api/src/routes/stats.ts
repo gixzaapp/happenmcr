@@ -40,7 +40,8 @@ router.post("/pageview", async (_req, res) => {
 
 /**
  * Increment today's unique-visitor count by 1.
- * Caller (Next middleware) must only invoke once per anonymous cookie per London day.
+ * Caller (client UniqueVisitBeacon) must only invoke once per browser per London day.
+ * Server middleware must NOT call this — bots inflate the count.
  */
 router.post("/unique-visit", async (_req, res) => {
   try {
