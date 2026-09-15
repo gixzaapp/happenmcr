@@ -4,7 +4,7 @@
  */
 export const ADSENSE_CLIENT =
   process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim() ||
-  "ca-pub-4393888257507260";
+  "ca-pub-7008611628034070";
 
 export function getAdSenseClient(): string | null {
   if (!/^ca-pub-\d+$/i.test(ADSENSE_CLIENT)) {

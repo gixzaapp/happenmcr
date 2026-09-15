@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-/** In-feed unit from AdSense dashboard (HappenMCR feed). */
+/** In-feed unit — client id from ADSENSE_CLIENT (ca-pub-7008611628034070). */
 export const ADSENSE_IN_FEED_SLOT = "4623759330";
 export const ADSENSE_IN_FEED_LAYOUT_KEY = "-6t+ed+2i-1n-4w";
 
