@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { EVENT_CATEGORIES } from "@happenmcr/types";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -32,6 +33,28 @@ const EVENT_IMAGE_HOSTS = [
   "salford.ac.uk",
 ];
 
+/**
+ * Alias → canonical category redirects (e.g. /category/electronic → /nightlife).
+ * Handled in next.config so Google gets a real 308 Location header — App Router
+ * permanentRedirect can cache a 308 without Location (GSC "Redirect error").
+ */
+function categoryAliasRedirects() {
+  /** @type {{ source: string; destination: string; permanent: boolean }[]} */
+  const rules = [];
+  for (const category of EVENT_CATEGORIES) {
+    if (category.id === "other") continue;
+    for (const alias of category.aliases) {
+      if (!alias || alias === category.id) continue;
+      rules.push({
+        source: `/category/${alias}`,
+        destination: `/category/${category.id}`,
+        permanent: true,
+      });
+    }
+  }
+  return rules;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@happenmcr/types"],
@@ -48,6 +71,9 @@ const nextConfig = {
     })),
   },
   trailingSlash: false,
+  async redirects() {
+    return categoryAliasRedirects();
+  },
 };
 
 export default nextConfig;

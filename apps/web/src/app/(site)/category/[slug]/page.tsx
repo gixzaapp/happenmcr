@@ -81,6 +81,8 @@ export async function generateMetadata({
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
+  // Alias → canonical is primarily handled in next.config redirects (reliable
+  // Location header). Keep this as a runtime safety net for uncached paths.
   const curated = getEventCategory(params.slug);
   if (curated && curated.id !== params.slug && curated.id !== "other") {
     permanentRedirect(`/category/${curated.id}`);
