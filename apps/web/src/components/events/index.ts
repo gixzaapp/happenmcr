@@ -3,7 +3,6 @@ export { EventBackButton } from "./EventBackButton";
 export { EventDetail } from "./EventDetail";
 export {
   EventList,
-  type EventListAdNetwork,
   type EventListItem,
   type EventListProps,
 } from "./EventList";

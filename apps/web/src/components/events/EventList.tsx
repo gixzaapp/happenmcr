@@ -1,4 +1,4 @@
-import { AdSenseInFeed, AdsterraInFeed } from "@/components/analytics";
+import { AdSenseInFeed } from "@/components/analytics";
 import type { Event } from "@happenmcr/types";
 import {
   EventCard,
@@ -11,8 +11,6 @@ export type EventListItem = EventCardProps & {
   id?: string;
 };
 
-export type EventListAdNetwork = "adsense" | "adsterra";
-
 export type EventListProps = {
   events: EventListItem[] | Event[];
   emptyMessage?: string;
@@ -21,13 +19,10 @@ export type EventListProps = {
   /** Heading level for card titles. */
   titleAs?: "h2" | "h3";
   /**
-   * Insert an in-feed ad after every N cards.
+   * Insert an AdSense in-feed unit after every N cards.
    * Set `0` to disable. Default: 6 (≈2 desktop rows).
-   * Adsterra only supports one container id — only the first slot is used.
    */
   adEvery?: number;
-  /** Default AdSense. Use `adsterra` on /events/today (Plan B). */
-  adNetwork?: EventListAdNetwork;
 };
 
 /** Place first in-feed ad after this many cards (then every `adEvery`). */
@@ -53,13 +48,8 @@ function shouldInsertAd(
   index: number,
   total: number,
   adEvery: number,
-  adNetwork: EventListAdNetwork,
-  adsterraUsed: boolean,
 ): boolean {
   if (adEvery <= 0 || total < AD_FIRST_AFTER) return false;
-  // One Adsterra container id per page — only the first in-feed slot.
-  if (adNetwork === "adsterra" && adsterraUsed) return false;
-
   const position = index + 1;
   if (position === AD_FIRST_AFTER) return true;
   if (position <= AD_FIRST_AFTER) return false;
@@ -73,7 +63,6 @@ export function EventList({
   "aria-label": ariaLabel = "Events",
   titleAs = "h2",
   adEvery = 6,
-  adNetwork = "adsense",
 }: EventListProps) {
   if (events.length === 0) {
     return (
@@ -85,8 +74,6 @@ export function EventList({
       </p>
     );
   }
-
-  let adsterraUsed = false;
 
   return (
     <ul
@@ -101,29 +88,12 @@ export function EventList({
           </li>,
         ];
 
-        if (
-          shouldInsertAd(
-            index,
-            events.length,
-            adEvery,
-            adNetwork,
-            adsterraUsed,
-          )
-        ) {
-          if (adNetwork === "adsterra") {
-            adsterraUsed = true;
-            nodes.push(
-              <li key={`adsterra-infeed-${index}`} className="min-w-0">
-                <AdsterraInFeed />
-              </li>,
-            );
-          } else {
-            nodes.push(
-              <li key={`adsense-infeed-${index}`} className="min-w-0">
-                <AdSenseInFeed />
-              </li>,
-            );
-          }
+        if (shouldInsertAd(index, events.length, adEvery)) {
+          nodes.push(
+            <li key={`adsense-infeed-${index}`} className="min-w-0">
+              <AdSenseInFeed />
+            </li>,
+          );
         }
 
         return nodes;

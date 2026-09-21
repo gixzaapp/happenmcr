@@ -18,10 +18,6 @@ export {
   ADSENSE_IN_FEED_LAYOUT_KEY,
   ADSENSE_IN_FEED_SLOT,
 } from "./AdSenseInFeed";
-export {
-  AdsterraInFeed,
-  ADSTERRA_CONTAINER_ID,
-} from "./AdsterraInFeed";
 export { trackEvent } from "./track";
 export { TrackedLink } from "./TrackedLink";
 export { ScrollDepthTracker } from "./ScrollDepthTracker";
