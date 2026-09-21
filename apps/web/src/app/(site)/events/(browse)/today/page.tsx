@@ -70,6 +70,7 @@ export default async function EventsTodayPage() {
           events={events}
           emptyMessage="No events listed for today yet — check back soon."
           aria-label="Events in Manchester today"
+          adNetwork="adsterra"
         />
       </div>
     </>
