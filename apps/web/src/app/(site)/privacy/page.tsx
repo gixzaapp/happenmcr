@@ -29,6 +29,7 @@ const sections = [
     title: "Information we collect",
     body: [
       "Newsletter details you provide, such as an email address when you join our list. We do not store newsletter emails in plaintext.",
+      "Event reminder details you provide, such as an email address when you ask to be notified about a specific event. We do not store those emails in plaintext.",
       "Technical data such as browser type, device information, and approximate location derived from IP address, collected automatically when you visit the site.",
       "Usage data such as pages viewed and links clicked, used to understand how the site is used and to improve it.",
     ],
@@ -38,18 +39,19 @@ const sections = [
     body: [
       "To run and improve HappenMCR, including event listings, search, and performance.",
       "To send optional newsletter updates when you have subscribed (we decrypt your email only when needed to send that message).",
+      "To send event reminders you asked for: one about a week before the event, and one the day before.",
       "To respond to enquiries you send us.",
       "To protect the site, prevent abuse, and meet legal obligations.",
     ],
   },
   {
-    title: "How we protect newsletter emails",
+    title: "How we protect email addresses",
     body: [
-      "When you join the newsletter, your email address is encrypted before it is written to our database using industry-standard AES-256-GCM encryption.",
+      "When you join the newsletter or ask for an event reminder, your email address is encrypted before it is written to our database using industry-standard AES-256-GCM encryption.",
       "We also store a one-way keyed hash of your email so we can recognise repeat sign-ups without keeping a readable copy of the address in an index.",
       "Encryption keys are kept separately from the application database and are not exposed in the public website.",
       "When email sending is enabled, we may send a welcome message and a weekly Thursday shortlist via our email provider. Plaintext addresses are reconstructed only for delivery.",
-      "You can unsubscribe using the link in any newsletter email.",
+      "You can unsubscribe using the link in any newsletter or event reminder email.",
     ],
   },
   {
@@ -78,7 +80,7 @@ const sections = [
   {
     title: "How long we keep data",
     body: [
-      "We keep encrypted newsletter records until you unsubscribe or ask us to delete them, plus technical logs for a limited period for security and operations.",
+      "We keep encrypted newsletter and event-reminder records until you unsubscribe or ask us to delete them, plus technical logs for a limited period for security and operations.",
       "After you unsubscribe, we may retain a minimal record so we do not email you again by mistake, unless you ask for full deletion.",
     ],
   },
@@ -86,7 +88,7 @@ const sections = [
     title: "Your rights",
     body: [
       "Depending on where you live (including the UK), you may have rights to access, correct, delete, or restrict use of your personal data, and to object to certain processing.",
-      "To exercise these rights, email hello@happenmcr.com. If you subscribed to the newsletter, you can also unsubscribe using the link in any email.",
+      "To exercise these rights, email hello@happenmcr.com. If you subscribed to the newsletter or an event reminder, you can also unsubscribe using the link in any email.",
     ],
   },
   {

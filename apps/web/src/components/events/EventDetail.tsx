@@ -8,6 +8,7 @@ import { formatEventDateLong } from "@/lib/format";
 import { withSkiddleTag } from "@/lib/skiddle";
 import { shouldUseSymbolicEventImage } from "@/lib/source";
 import { EventBackButton } from "./EventBackButton";
+import { EventNotifyForm } from "./EventNotifyForm";
 import { EventSymbolicPoster } from "./EventSymbolicPoster";
 import { ExploreMoreLinks, eventExploreLinks } from "@/components/seo";
 
@@ -180,6 +181,7 @@ export function EventDetail({ event }: EventDetailProps) {
           >
             This weekend
           </Link>
+          <EventNotifyForm eventId={event.id} startTime={event.start_time} />
         </div>
 
         <ExploreMoreLinks links={eventExploreLinks(event)} />

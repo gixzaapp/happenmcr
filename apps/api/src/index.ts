@@ -10,6 +10,10 @@ import {
   startNewsletterCron,
 } from "./jobs/newsletter-cron.js";
 import {
+  getEventReminderCronStatus,
+  startEventReminderCron,
+} from "./jobs/event-reminder-cron.js";
+import {
   getSlackNotifyCronStatus,
   startSlackNotifyCron,
 } from "./jobs/slack-notify-cron.js";
@@ -18,6 +22,7 @@ import eventsRouter from "./routes/events.js";
 import eventSubmissionsRouter from "./routes/event-submissions.js";
 import ingestRouter from "./routes/ingest.js";
 import newsletterRouter from "./routes/newsletter.js";
+import eventRemindersRouter from "./routes/event-reminders.js";
 import slackRouter from "./routes/slack.js";
 import statsRouter from "./routes/stats.js";
 import submitEventRouter from "./routes/submit-event.js";
@@ -58,6 +63,7 @@ app.get("/health", async (_req, res) => {
     await prisma.$queryRaw`SELECT 1`;
     const cron = getIngestionCronStatus();
     const newsletter = getNewsletterCronStatus();
+    const reminders = getEventReminderCronStatus();
     const slack = getSlackNotifyCronStatus();
     const body: HealthResponse & {
       cron: {
@@ -67,6 +73,12 @@ app.get("/health", async (_req, res) => {
         lastFinishedAt: string | null;
       };
       newsletter: {
+        enabled: boolean;
+        schedule: string;
+        running: boolean;
+        lastFinishedAt: string | null;
+      };
+      eventReminders: {
         enabled: boolean;
         schedule: string;
         running: boolean;
@@ -94,6 +106,12 @@ app.get("/health", async (_req, res) => {
         running: newsletter.running,
         lastFinishedAt: newsletter.lastFinishedAt,
       },
+      eventReminders: {
+        enabled: reminders.enabled,
+        schedule: reminders.schedule,
+        running: reminders.running,
+        lastFinishedAt: reminders.lastFinishedAt,
+      },
       slackNotify: {
         enabled: slack.enabled,
         schedule: slack.schedule,
@@ -117,6 +135,7 @@ app.use("/event-submissions", eventSubmissionsRouter);
 app.use("/ingest", ingestRouter);
 app.use("/stats", statsRouter);
 app.use("/newsletter", newsletterRouter);
+app.use("/event-reminders", eventRemindersRouter);
 app.use("/submit-event", submitEventRouter);
 app.use("/lens", lensRouter);
 
@@ -124,5 +143,6 @@ app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
   startIngestionCron();
   startNewsletterCron();
+  startEventReminderCron();
   startSlackNotifyCron();
 });

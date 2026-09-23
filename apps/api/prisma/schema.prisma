@@ -26,6 +26,7 @@ model Event {
   isFree       Boolean  @default(false) @map("is_free")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  reminders    EventReminder[]
 
   @@index([startTime])
   @@index([category])
@@ -49,6 +50,22 @@ model DailyUniqueStat {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("daily_unique_stats")
+}
+
+/** Email reminder for one event. Address stored encrypted, same as the newsletter. */
+model EventReminder {
+  id             String    @id @default(cuid())
+  eventId        String    @map("event_id")
+  emailHash      String    @map("email_hash")
+  emailEncrypted String    @map("email_encrypted")
+  weekSentAt     DateTime? @map("week_sent_at")
+  daySentAt      DateTime? @map("day_sent_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  event          Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, emailHash])
+  @@index([eventId])
+  @@map("event_reminders")
 }
 
 model NewsletterSubscriber {
