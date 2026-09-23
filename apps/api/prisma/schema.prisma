@@ -157,10 +157,63 @@ model User {
   sessions      Session[]
   lensPhotos    LensPhoto[]
   lensPhotoLikes LensPhotoLike[]
+  poems         Poem[]
+  poemLikes     PoemLike[]
+  poetProfile   PoetProfile?
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+/** Public showcase for a Poet's Corner writer. */
+model PoetProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  name      String
+  bio       String?  @db.Text
+  imageKey  String?  @map("image_key")
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("poet_profiles")
+}
+
+/** Community poem for Poet's Corner. Body is sanitized HTML. */
+model Poem {
+  id         String    @id @default(cuid())
+  title      String
+  authorName String    @map("author_name")
+  bodyHtml   String    @map("body_html") @db.Text
+  excerpt    String?
+  place      String?
+  dedication String?
+  imageKey   String?   @map("image_key")
+  imageUrl   String?   @map("image_url")
+  userId     String?   @map("user_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes      PoemLike[]
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("poems")
+}
+
+model PoemLike {
+  id        String   @id @default(cuid())
+  poemId    String   @map("poem_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  poem      Poem     @relation(fields: [poemId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([poemId, userId])
+  @@index([poemId])
+  @@index([userId])
+  @@map("poem_likes")
 }
 
 model Account {

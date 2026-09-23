@@ -14,6 +14,7 @@ import {
 } from "@/lib/mcr-buzz";
 import { MCR_HISTORY_LABEL, MCR_HISTORY_PATH } from "@/lib/mcr-history";
 import { MCR_ON_LENS_LABEL, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
+import { POETS_CORNER_LABEL, POETS_CORNER_PATH } from "@/lib/poets-corner";
 import { buildPageMetadata } from "@/lib/seo";
 
 /** Always fresh — avoid sticky empty ISR after deploy/ingest. */
@@ -121,6 +122,23 @@ export default async function McrBuzzHubPage() {
               </p>
               <p className="mt-3 text-sm font-semibold text-industrial-black">
                 View the feed →
+              </p>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={POETS_CORNER_PATH}
+              className="group block transition hover:opacity-90"
+            >
+              <h3 className="font-display text-2xl font-bold text-industrial-black group-hover:underline">
+                {POETS_CORNER_LABEL}
+              </h3>
+              <p className="mt-2 text-sm text-secondary">
+                Read and share poems from Manchester — community verse, with
+                room to like or report a piece.
+              </p>
+              <p className="mt-3 text-sm font-semibold text-industrial-black">
+                Open the corner →
               </p>
             </Link>
           </li>

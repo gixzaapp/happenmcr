@@ -11,6 +11,7 @@ import {
   MCR_ON_LENS_MAP_PATH,
   MCR_ON_LENS_PATH,
 } from "@/lib/mcr-on-lens";
+import { POETS_CORNER_PATH } from "@/lib/poets-corner";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
 import { WHATS_ON_MANCHESTER_PATH } from "@/lib/seo";
 
@@ -25,6 +26,7 @@ export const revalidate = 3_600;
  * - /search
  * - /login
  * - /mcr-buzz/mcr-on-lens/upload
+ * - /mcr-buzz/poets-corner/write
  * - /getmethevisitorcount
  * - /auth/*
  */
@@ -147,6 +149,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: absoluteUrl(MCR_ON_LENS_PATH),
       lastModified: lensLastMod,
+      changeFrequency: "weekly",
+      priority: 0.65,
+    },
+    {
+      url: absoluteUrl(POETS_CORNER_PATH),
+      lastModified: generatedAt,
       changeFrequency: "weekly",
       priority: 0.65,
     },

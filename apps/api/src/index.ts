@@ -27,6 +27,8 @@ import slackRouter from "./routes/slack.js";
 import statsRouter from "./routes/stats.js";
 import submitEventRouter from "./routes/submit-event.js";
 import lensRouter from "./routes/lens.js";
+import poemsRouter from "./routes/poems.js";
+import poetProfilesRouter from "./routes/poet-profiles.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -138,6 +140,8 @@ app.use("/newsletter", newsletterRouter);
 app.use("/event-reminders", eventRemindersRouter);
 app.use("/submit-event", submitEventRouter);
 app.use("/lens", lensRouter);
+app.use("/poems", poemsRouter);
+app.use("/poet-profiles", poetProfilesRouter);
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);

@@ -30,6 +30,7 @@ const sections = [
     body: [
       "Newsletter details you provide, such as an email address when you join our list. We do not store newsletter emails in plaintext.",
       "Event reminder details you provide, such as an email address when you ask to be notified about a specific event. We do not store those emails in plaintext.",
+      "Poems you choose to publish in Poet's Corner, including the title, author name, text, any image you upload, and the name, bio, and profile picture on your public poet profile. These are shown publicly.",
       "Technical data such as browser type, device information, and approximate location derived from IP address, collected automatically when you visit the site.",
       "Usage data such as pages viewed and links clicked, used to understand how the site is used and to improve it.",
     ],

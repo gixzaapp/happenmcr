@@ -1,5 +1,5 @@
 import { ManchesterHistoryArticle } from "@/components/mcr-buzz/ManchesterHistoryArticle";
-import { historySans, historySerif } from "@/fonts/fonts";
+import { historySans, historySerif } from "@/fonts/history-fonts";
 import { JsonLd } from "@/components/seo";
 import {
   buildArticleJsonLd,

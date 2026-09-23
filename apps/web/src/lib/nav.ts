@@ -4,6 +4,7 @@ import {
 } from "@/lib/mcr-buzz";
 import { MCR_HISTORY_LABEL, MCR_HISTORY_PATH } from "@/lib/mcr-history";
 import { MCR_ON_LENS_LABEL, MCR_ON_LENS_PATH } from "@/lib/mcr-on-lens";
+import { POETS_CORNER_LABEL, POETS_CORNER_PATH } from "@/lib/poets-corner";
 
 export type NavItem = {
   href: string;
@@ -27,12 +28,13 @@ export const primaryNav: NavItem[] = [
 export const mcrBuzzNav: NavDropdown = {
   label: "MCR Buzz",
   children: [
+    { href: MCR_HISTORY_PATH, label: MCR_HISTORY_LABEL },
+    { href: POETS_CORNER_PATH, label: POETS_CORNER_LABEL },
+    { href: MCR_ON_LENS_PATH, label: MCR_ON_LENS_LABEL },
     ...listMcrBuzzNavSections().map((section) => ({
       href: mcrBuzzPath(section.slug),
       label: section.label,
     })),
-    { href: MCR_HISTORY_PATH, label: MCR_HISTORY_LABEL },
-    { href: MCR_ON_LENS_PATH, label: MCR_ON_LENS_LABEL },
   ],
 };
 
