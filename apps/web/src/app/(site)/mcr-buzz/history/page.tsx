@@ -1,5 +1,5 @@
-import { Newsreader, Public_Sans } from "next/font/google";
 import { ManchesterHistoryArticle } from "@/components/mcr-buzz/ManchesterHistoryArticle";
+import { historySans, historySerif } from "@/fonts/fonts";
 import { JsonLd } from "@/components/seo";
 import {
   buildArticleJsonLd,
@@ -17,18 +17,6 @@ import {
   MCR_HISTORY_PUBLISHED,
 } from "@/lib/mcr-history";
 import { buildPageMetadata, truncateSeoText } from "@/lib/seo";
-
-const historySerif = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-history-serif",
-  display: "swap",
-});
-
-const historySans = Public_Sans({
-  subsets: ["latin"],
-  variable: "--font-history-sans",
-  display: "swap",
-});
 
 const historyDescription = truncateSeoText(MCR_HISTORY_DESCRIPTION);
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { display, sans } from "@/fonts/fonts";
 import {
   GoogleAdSense,
   GoogleAnalytics,
@@ -17,24 +17,6 @@ import {
   SITE_NAME,
 } from "@/lib/seo";
 import "./globals.css";
-
-const display = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-  weight: ["600", "700", "800"],
-  preload: true,
-  adjustFontFallback: true,
-});
-
-const sans = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-  weight: ["400", "600"],
-  preload: true,
-  adjustFontFallback: true,
-});
 
 const adsenseClient = getAdSenseClient();
 
