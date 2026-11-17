@@ -1,6 +1,7 @@
 import { ManchesterHistoryArticle } from "@/components/mcr-buzz/ManchesterHistoryArticle";
 import { historySans, historySerif } from "@/fonts/history-fonts";
-import { JsonLd } from "@/components/seo";
+import { JsonLd, RelatedEventsWidget } from "@/components/seo";
+import { getTodayEvents } from "@/lib/api";
 import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
@@ -32,7 +33,9 @@ export const metadata = buildPageMetadata({
   modifiedTime: `${MCR_HISTORY_PUBLISHED}T00:00:00.000Z`,
 });
 
-export default function ManchesterHistoryPage() {
+export default async function ManchesterHistoryPage() {
+  const todayEvents = await getTodayEvents();
+
   return (
     <>
       <JsonLd
@@ -55,6 +58,14 @@ export default function ManchesterHistoryPage() {
         heroImageUrl={MANCHESTER_HISTORY_IMAGES.hero}
         className={`${historySerif.variable} ${historySans.variable}`}
       />
+      <div className="mx-auto max-w-site px-grid-margin pb-16">
+        <RelatedEventsWidget
+          title="Meanwhile — events in Manchester today"
+          events={todayEvents}
+          moreHref="/events/today"
+          moreLabel="Events in Manchester today"
+        />
+      </div>
     </>
   );
 }

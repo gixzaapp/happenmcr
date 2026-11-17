@@ -99,6 +99,28 @@ export const EDITORIAL_HUBS: EditorialHub[] = [
       "HappenMCR",
     ],
   },
+  {
+    slug: "northern-quarter-nightlife",
+    path: "/whats-on/northern-quarter-nightlife",
+    title: "Northern Quarter Nightlife",
+    headline: "Northern Quarter nightlife in Manchester",
+    description:
+      "Northern Quarter nightlife — bars, clubs, gigs, and late nights around Manchester’s NQ. Updated on HappenMCR.",
+    intro:
+      "The Northern Quarter still packs more nights into a few streets than most UK cities manage in a whole district: basement clubs, indie gigs, cocktail rooms, and late kitchens that keep the pavement busy after midnight. This hub pulls nightlife and late listings tied to NQ venues and addresses so you can scan what is on without guessing which postcode is which. Always check door times and entry rules on the event page — NQ rooms change bills week to week.",
+    tips: [
+      "Band on the Wall, Stevenson Square, and Oldham Street rooms sell out early on Friday and Saturday.",
+      "Pair with Today for same-night plans, or Nightlife for the wider city centre.",
+      "If your NQ night is missing, submit it — community listings sit alongside venue calendars.",
+    ],
+    keywords: [
+      "Northern Quarter nightlife",
+      "Northern Quarter Manchester events",
+      "NQ nightlife Manchester",
+      "bars Northern Quarter",
+      "HappenMCR",
+    ],
+  },
 ];
 
 const hubsBySlug = new Map(EDITORIAL_HUBS.map((hub) => [hub.slug, hub]));
@@ -113,6 +135,12 @@ export function listEditorialHubs(): EditorialHub[] {
 
 const DNB_RE =
   /\b(drum\s*(and|&)\s*bass|dnb|d&b|jungle|neurofunk|liquid\s*dnb)\b/i;
+
+const NQ_RE =
+  /\b(northern\s*quarter|\bnq\b|oldham\s*street|stevenson\s*square|tib\s*street|thomas\s*street|band\s*on\s*the\s*wall|soup\s*kitchen|yes\s*\(?manchester\)?|afflecks)\b/i;
+
+const NIGHTLIFE_RE =
+  /\b(nightlife|club|dj|rave|late\s*night|bar\s*night|club\s*night|afterparty)\b/i;
 
 export function filterEventsForHub(slug: string, events: Event[]): Event[] {
   const key = slug.trim().toLowerCase();
@@ -152,6 +180,27 @@ export function filterEventsForHub(slug: string, events: Event[]): Event[] {
           ...event.tags,
         ].join(" ");
         return DNB_RE.test(hay);
+      });
+    case "northern-quarter-nightlife":
+      return upcoming.filter((event) => {
+        const place = [
+          event.venue_name ?? "",
+          event.venue_address ?? "",
+          event.title,
+          event.description ?? "",
+        ].join(" ");
+        if (!NQ_RE.test(place)) return false;
+        const vibe = [
+          event.category ?? "",
+          ...event.tags,
+          event.title,
+          event.description ?? "",
+        ].join(" ");
+        return (
+          /nightlife|music|club|gig|live/i.test(event.category ?? "") ||
+          NIGHTLIFE_RE.test(vibe) ||
+          NQ_RE.test(place)
+        );
       });
     default:
       return upcoming;

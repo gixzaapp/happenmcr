@@ -30,7 +30,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 const EXPLORE_LINKS = [
-  { href: "/events/today", label: "Events today" },
+  { href: "/events/today", label: "Events in Manchester today" },
   { href: "/events/weekend", label: "This weekend" },
   { href: "/whats-on/free-events-manchester", label: "Free events guide" },
   {
@@ -44,6 +44,10 @@ const EXPLORE_LINKS = [
   {
     href: "/whats-on/drum-and-bass-manchester",
     label: "Drum and bass",
+  },
+  {
+    href: "/whats-on/northern-quarter-nightlife",
+    label: "Northern Quarter nightlife",
   },
   { href: "/category/live-music", label: "Live music / gigs" },
   { href: "/mcr-buzz", label: "MCR Buzz" },
@@ -148,7 +152,7 @@ export default async function WhatsOnManchesterPage() {
             href="/events/today"
             className="text-sm font-semibold text-industrial-black underline decoration-bee-yellow underline-offset-4"
           >
-            Full today list
+            Events in Manchester today
           </Link>
         </div>
         <div className="mt-8">

@@ -17,6 +17,7 @@ export {
 } from "@/lib/seo";
 export { JsonLd } from "./JsonLd";
 export { ExploreMoreLinks, type ExploreMoreLink } from "./ExploreMoreLinks";
+export { RelatedEventsWidget } from "./RelatedEventsWidget";
 export {
   categoryExploreLinks,
   categoryLinksFromEvents,

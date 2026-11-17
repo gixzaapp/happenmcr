@@ -8,7 +8,7 @@ import {
 import type { ExploreMoreLink } from "./ExploreMoreLinks";
 
 const WHEN_LINKS: ExploreMoreLink[] = [
-  { href: "/events/today", label: "Events today" },
+  { href: "/events/today", label: "Events in Manchester today" },
   { href: "/events/weekend", label: "Events this weekend" },
 ];
 

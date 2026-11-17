@@ -37,6 +37,24 @@ function eventPageUrl(event: Event): string {
   return new URL(buildEventPath(event), getSiteUrl()).toString();
 }
 
+/** Plain-text description for Event JSON-LD (strip tags / collapse whitespace). */
+function plainTextDescription(
+  value: string | null | undefined,
+): string | undefined {
+  if (!value) return undefined;
+  const text = value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > 0 ? text : undefined;
+}
+
 export type BreadcrumbItem = {
   name: string;
   /** Site path, e.g. `/events/today` */
@@ -461,14 +479,23 @@ function buildEventNode(event: Event): { [key: string]: JsonLdValue | undefined 
   const images = eventJsonLdImages(event, showImage);
   const endDate = eventEndDate(event);
 
+  const eventStatus =
+    event.status === "cancelled"
+      ? "https://schema.org/EventCancelled"
+      : event.status === "postponed"
+        ? "https://schema.org/EventPostponed"
+        : "https://schema.org/EventScheduled";
+
   return {
     "@type": "Event",
     "@id": `${pageUrl}#event`,
     name: event.title,
-    description: event.description,
+    description: plainTextDescription(
+      event.custom_intro || event.description,
+    ),
     startDate: event.start_time,
     endDate,
-    eventStatus: "https://schema.org/EventScheduled",
+    eventStatus,
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     url: pageUrl,
     image: images.length === 1 ? images[0] : images,

@@ -116,17 +116,10 @@ export function ImpactNow({ workshop }: ImpactNowProps) {
             <h3 className="mb-2 font-display text-headline-sm text-industrial-black">
               Mustard Tree Warehouse
             </h3>
-            <p className="mb-4 text-body-md text-secondary">
+            <p className="text-body-md text-secondary">
               Helping combat poverty through furniture, food, and community
               training.
             </p>
-            <a
-              href="#"
-              className="inline-flex items-center gap-2 text-label-md font-bold text-industrial-black"
-            >
-              Donate Now
-              <span className="material-symbols-outlined text-sm">payments</span>
-            </a>
           </div>
 
           <div className="relative overflow-hidden bg-industrial-black p-6 text-white">

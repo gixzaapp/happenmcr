@@ -144,7 +144,7 @@ export default async function EditorialHubPage({ params }: HubPageProps) {
         title="More Manchester guides"
         links={[
           { href: "/whats-on-manchester", label: "What's on in Manchester" },
-          { href: "/events/today", label: "Today" },
+          { href: "/events/today", label: "Events in Manchester today" },
           { href: "/events/weekend", label: "This weekend" },
           { href: "/about", label: "About HappenMCR" },
           ...otherHubs,
