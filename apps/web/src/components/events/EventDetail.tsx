@@ -4,6 +4,10 @@ import type { Event } from "@happenmcr/types";
 import { buildCategoryPath, buildVenuePath } from "@happenmcr/types";
 import { eventImageAlt } from "@/lib/a11y";
 import { eventMediaPath } from "@/lib/event-media";
+import {
+  buildEventFallbackCopy,
+  isThinEventDescription,
+} from "@/lib/event-indexability";
 import { formatEventDateLong } from "@/lib/format";
 import { withSkiddleTag } from "@/lib/skiddle";
 import { shouldUseSymbolicEventImage } from "@/lib/source";
@@ -18,6 +22,11 @@ type EventDetailProps = {
 
 export function EventDetail({ event }: EventDetailProps) {
   const startLabel = formatEventDateLong(event.start_time);
+  const aboutBody =
+    event.custom_intro?.trim() ||
+    (isThinEventDescription(event.description)
+      ? buildEventFallbackCopy(event, startLabel)
+      : event.description);
   const endLabel = event.end_time ? formatEventDateLong(event.end_time) : null;
   const venueLine = [event.venue_name, event.venue_address]
     .filter(Boolean)
@@ -142,14 +151,33 @@ export function EventDetail({ event }: EventDetailProps) {
           </div>
         </dl>
 
-        {event.description ? (
+        {aboutBody ? (
           <div className="mt-8">
             <h2 className="font-display text-lg font-semibold text-[color:var(--ink)]">
               About
             </h2>
-            <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[color:var(--muted)]">
-              {event.description}
-            </p>
+            {event.custom_intro?.trim() &&
+            event.description &&
+            !isThinEventDescription(event.description) ? (
+              <>
+                <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[color:var(--ink)]">
+                  {event.custom_intro.trim()}
+                </p>
+                <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-[color:var(--muted)]">
+                  {event.description}
+                </p>
+              </>
+            ) : (
+              <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[color:var(--muted)]">
+                {aboutBody}
+              </p>
+            )}
+            {event.local_tip?.trim() ? (
+              <p className="mt-4 rounded-md border border-[color:var(--line)] bg-[color:var(--surface-2)] px-4 py-3 text-sm text-[color:var(--ink)]">
+                <span className="font-semibold">Local tip: </span>
+                {event.local_tip.trim()}
+              </p>
+            ) : null}
           </div>
         ) : null}
 

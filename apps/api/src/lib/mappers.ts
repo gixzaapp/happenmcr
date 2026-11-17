@@ -34,5 +34,7 @@ export function toEventDto(event: PrismaEvent): EventDto {
     ticket_url: event.ticketUrl,
     is_free: event.isFree,
     status: toEventStatus(event.status),
+    custom_intro: event.customIntro,
+    local_tip: event.localTip,
   };
 }

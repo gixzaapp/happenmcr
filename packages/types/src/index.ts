@@ -31,6 +31,10 @@ export interface Event {
   ticket_url: string | null;
   is_free: boolean;
   status: EventStatus;
+  /** HappenMCR-written intro — unique copy for AdSense / SEO quality. */
+  custom_intro: string | null;
+  /** Optional local tip (e.g. Metrolink stop). */
+  local_tip: string | null;
 }
 
 export interface CategoryInfo {

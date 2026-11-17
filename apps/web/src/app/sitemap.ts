@@ -13,6 +13,7 @@ import {
 } from "@/lib/mcr-on-lens";
 import { POETS_CORNER_PATH } from "@/lib/poets-corner";
 import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
+import { listEditorialHubs } from "@/lib/editorial-hubs";
 import { WHATS_ON_MANCHESTER_PATH } from "@/lib/seo";
 
 /**
@@ -37,6 +38,10 @@ const COMMUNITY_PATH = "/community";
 const SUBMIT_EVENT_PATH = "/submit-event";
 const MCR_BUZZ_HUB_PATH = "/mcr-buzz";
 const PRIVACY_PATH = "/privacy";
+const ABOUT_PATH = "/about";
+const CONTACT_PATH = "/contact";
+/** Keep past events out of the sitemap after this many days. */
+const SITEMAP_EVENT_RETENTION_DAYS = 7;
 
 function absoluteUrl(path: string): string {
   return new URL(path.startsWith("/") ? path : `/${path}`, getSiteUrl()).toString();
@@ -165,6 +170,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: absoluteUrl(ABOUT_PATH),
+      lastModified: generatedAt,
+      changeFrequency: "monthly",
+      priority: 0.55,
+    },
+    {
+      url: absoluteUrl(CONTACT_PATH),
+      lastModified: generatedAt,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
       url: absoluteUrl(PRIVACY_PATH),
       lastModified: generatedAt,
       changeFrequency: "yearly",
@@ -181,25 +198,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  const editorialHubPages: MetadataRoute.Sitemap = listEditorialHubs().map(
+    (hub) => ({
+      url: absoluteUrl(hub.path),
+      lastModified: generatedAt,
+      changeFrequency: "daily" as const,
+      priority: 0.85,
+    }),
+  );
+
   // Prefer sitemap generation time when the event is still upcoming — reflects
   // re-ingest / listing presence rather than a stale one-off build stamp.
-  const eventPages: MetadataRoute.Sitemap = events.map((event) => {
-    const start = new Date(event.start_time);
-    const startMs = start.getTime();
-    const lastModified =
-      Number.isFinite(startMs) && startMs > generatedAt.getTime()
-        ? generatedAt
-        : Number.isFinite(startMs)
-          ? start
-          : generatedAt;
+  // Drop events that ended (or started) more than SITEMAP_EVENT_RETENTION_DAYS ago.
+  const retentionCutoff =
+    generatedAt.getTime() - SITEMAP_EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const eventPages: MetadataRoute.Sitemap = events
+    .filter((event) => {
+      const endMs = event.end_time
+        ? new Date(event.end_time).getTime()
+        : new Date(event.start_time).getTime();
+      return Number.isFinite(endMs) && endMs >= retentionCutoff;
+    })
+    .map((event) => {
+      const start = new Date(event.start_time);
+      const startMs = start.getTime();
+      const lastModified =
+        Number.isFinite(startMs) && startMs > generatedAt.getTime()
+          ? generatedAt
+          : Number.isFinite(startMs)
+            ? start
+            : generatedAt;
 
-    return {
-      url: absoluteUrl(buildEventPath(event)),
-      lastModified,
-      changeFrequency: "weekly" as const,
-      priority: 0.75,
-    };
-  });
+      return {
+        url: absoluteUrl(buildEventPath(event)),
+        lastModified,
+        changeFrequency: "weekly" as const,
+        priority: 0.75,
+      };
+    });
 
   const venuePages: MetadataRoute.Sitemap = venues.map((venue) => ({
     url: absoluteUrl(`/venue/${venue.slug}`),
@@ -232,6 +268,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const entry of [
     ...staticPages,
     ...mcrBuzzPages,
+    ...editorialHubPages,
     ...eventPages,
     ...venuePages,
     ...categoryPages,

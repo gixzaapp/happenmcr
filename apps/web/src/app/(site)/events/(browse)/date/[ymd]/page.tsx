@@ -71,6 +71,9 @@ export async function generateMetadata({
       "Manchester gigs",
       "HappenMCR",
     ],
+    // Thin date indexes look like empty doorways to AdSense / search.
+    index: count >= 3,
+    follow: true,
   });
 }
 

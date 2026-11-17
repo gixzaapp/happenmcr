@@ -265,6 +265,30 @@ export type CollectionPageJsonLdOptions = {
   isPartOf?: { name: string; path: string };
 };
 
+/** schema.org WebPage for simple editorial pages (About, Contact). */
+export function buildWebPageJsonLd(options: {
+  name: string;
+  description: string;
+  path: string;
+}): Record<string, unknown> {
+  const pageUrl = toAbsoluteUrl(options.path);
+  const payload = prune({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${pageUrl}#webpage`,
+    name: options.name,
+    description: options.description,
+    url: pageUrl,
+    inLanguage: "en-GB",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "HappenMCR",
+      url: toAbsoluteUrl("/"),
+    },
+  });
+  return payload ?? {};
+}
+
 /**
  * schema.org CollectionPage JSON-LD for MCR Buzz hubs (e.g. MCR on Lens feed).
  */

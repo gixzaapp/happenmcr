@@ -32,12 +32,22 @@ export const metadata: Metadata = buildPageMetadata({
 const EXPLORE_LINKS = [
   { href: "/events/today", label: "Events today" },
   { href: "/events/weekend", label: "This weekend" },
-  { href: "/events/free", label: "Free events" },
+  { href: "/whats-on/free-events-manchester", label: "Free events guide" },
+  {
+    href: "/whats-on/things-to-do-this-weekend-manchester",
+    label: "Weekend guide",
+  },
+  {
+    href: "/whats-on/student-nights-manchester",
+    label: "Student nights",
+  },
+  {
+    href: "/whats-on/drum-and-bass-manchester",
+    label: "Drum and bass",
+  },
   { href: "/category/live-music", label: "Live music / gigs" },
-  { href: "/category/nightlife", label: "Nightlife" },
-  { href: "/category/festivals", label: "Festivals" },
-  { href: "/community", label: "Community" },
   { href: "/mcr-buzz", label: "MCR Buzz" },
+  { href: "/about", label: "About HappenMCR" },
 ] as const;
 
 export default async function WhatsOnManchesterPage() {
@@ -91,6 +101,12 @@ export default async function WhatsOnManchesterPage() {
         <p className="mt-4 text-base text-secondary sm:text-lg">
           Your daily guide to what&apos;s on in Manchester — gigs, nightlife,
           free events, festivals, and local plans, updated throughout the day.
+        </p>
+        <p className="mt-4 text-base text-secondary sm:text-lg">
+          We curate the city calendar from public venue sources and organiser
+          submissions, then add original Manchester writing under MCR Buzz. Use
+          the guides for free events, student nights, drum and bass, or this
+          weekend — or jump straight into today&apos;s list below.
         </p>
       </header>
 

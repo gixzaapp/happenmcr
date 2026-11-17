@@ -1,6 +1,13 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../db.js";
 import { resolveCampusVenueFromLinks } from "../lib/campus-venue.js";
+import { getDayRange } from "../lib/dates.js";
+import {
+  eventFingerprint,
+  fingerprintsMatch,
+  londonYmd,
+  sourceRank,
+} from "../lib/event-dedupe.js";
 import { fetchEventbriteEvents } from "./sources/eventbrite.js";
 import { fetchMeetupEvents } from "./sources/meetup.js";
 import { fetchSkiddleEvents } from "./sources/skiddle.js";
@@ -54,7 +61,12 @@ export type AggregationResult = {
   fetchedFromScrapers: number;
   normalised: number;
   skipped: number;
+  /** Same source+url updates + new creates. */
   upserted: number;
+  /** Dropped because another source already has the same title/day/venue. */
+  duplicatesSkipped: number;
+  /** Extra copies removed from the database after ingest. */
+  duplicatesPurged: number;
 };
 
 function asString(value: unknown): string | null {
@@ -220,36 +232,240 @@ export function normaliseEvent(raw: RawEventInput): NormalisedEvent | null {
   };
 }
 
-async function upsertNormalisedEvent(event: NormalisedEvent): Promise<void> {
+type UpsertOutcome = "upserted" | "duplicate";
+
+async function applyPreservedFields(
+  existing: {
+    imageUrl: string | null;
+    status: string;
+    customIntro?: string | null;
+    localTip?: string | null;
+  },
+  event: NormalisedEvent,
+): Promise<Prisma.EventUpdateInput> {
+  const data: Prisma.EventUpdateInput = {
+    ...event,
+    status: existing.status,
+    // Manual editorial fields must survive re-ingest.
+    customIntro: existing.customIntro ?? null,
+    localTip: existing.localTip ?? null,
+  };
+  if (existing.imageUrl && isStockImageUrl(existing.imageUrl)) {
+    data.imageUrl = existing.imageUrl;
+  }
+  return data;
+}
+
+async function findCrossSourceDuplicate(
+  event: NormalisedEvent,
+): Promise<{
+  id: string;
+  imageUrl: string | null;
+  status: string;
+  source: string | null;
+  sourceUrl: string | null;
+  ticketUrl: string | null;
+  description: string | null;
+  customIntro: string | null;
+  localTip: string | null;
+} | null> {
+  const startTime =
+    event.startTime instanceof Date
+      ? event.startTime
+      : new Date(String(event.startTime));
+  if (Number.isNaN(startTime.getTime())) return null;
+
+  const range = getDayRange(londonYmd(startTime));
+  if (!range) return null;
+
+  const title = asString(event.title);
+  if (!title) return null;
+
+  const candidates = await prisma.event.findMany({
+    where: { startTime: { gte: range.start, lte: range.end } },
+    select: {
+      id: true,
+      title: true,
+      venueName: true,
+      startTime: true,
+      source: true,
+      sourceUrl: true,
+      imageUrl: true,
+      status: true,
+      ticketUrl: true,
+      description: true,
+      customIntro: true,
+      localTip: true,
+    },
+  });
+
+  const source = asString(event.source);
+  const sourceUrl = asString(event.sourceUrl);
+  const venueName = asString(event.venueName);
+
+  return (
+    candidates.find((candidate) => {
+      if (
+        source &&
+        sourceUrl &&
+        candidate.source === source &&
+        candidate.sourceUrl === sourceUrl
+      ) {
+        return false;
+      }
+      return fingerprintsMatch(
+        { title, venueName, startTime },
+        {
+          title: candidate.title,
+          venueName: candidate.venueName,
+          startTime: candidate.startTime,
+        },
+      );
+    }) ?? null
+  );
+}
+
+/**
+ * Fill empty fields on an existing cross-source match from the incoming row.
+ * Does not change source identity or status.
+ */
+async function mergeIntoExisting(
+  existing: {
+    id: string;
+    imageUrl: string | null;
+    status: string;
+    ticketUrl: string | null;
+    description: string | null;
+  },
+  event: NormalisedEvent,
+): Promise<void> {
+  const incomingImage = asString(event.imageUrl);
+  const incomingTicket = asString(event.ticketUrl);
+  const incomingDescription = asString(event.description);
+
+  const data: Prisma.EventUpdateInput = {};
+  if (!existing.imageUrl && incomingImage) data.imageUrl = incomingImage;
+  if (!existing.ticketUrl && incomingTicket) data.ticketUrl = incomingTicket;
+  if (!existing.description && incomingDescription) {
+    data.description = incomingDescription;
+  }
+
+  if (Object.keys(data).length === 0) return;
+
+  await prisma.event.update({ where: { id: existing.id }, data });
+}
+
+async function upsertNormalisedEvent(
+  event: NormalisedEvent,
+): Promise<UpsertOutcome> {
   const source = asString(event.source);
   const sourceUrl = asString(event.sourceUrl);
 
   if (source && sourceUrl) {
     const existing = await prisma.event.findFirst({
       where: { source, sourceUrl },
-      select: { id: true, imageUrl: true, status: true },
+      select: {
+        id: true,
+        imageUrl: true,
+        status: true,
+        customIntro: true,
+        localTip: true,
+      },
     });
 
     if (existing) {
-      // Keep manual stock CDN overrides (Pixabay / Unsplash) across re-ingest.
-      const data: Prisma.EventUpdateInput = {
-        ...event,
-        // Manual postponed/cancelled must survive listing scrapes.
-        status: existing.status,
-      };
-      if (existing.imageUrl && isStockImageUrl(existing.imageUrl)) {
-        data.imageUrl = existing.imageUrl;
-      }
-
+      const data = await applyPreservedFields(existing, event);
       await prisma.event.update({
         where: { id: existing.id },
         data,
       });
-      return;
+      return "upserted";
     }
   }
 
+  const cross = await findCrossSourceDuplicate(event);
+  if (cross) {
+    // Prefer the higher-ranked source; never create a second row.
+    if (sourceRank(source) > sourceRank(cross.source)) {
+      const data = await applyPreservedFields(cross, event);
+      await prisma.event.update({
+        where: { id: cross.id },
+        data: {
+          ...data,
+          // Take over identity so future scrapes of this source update this row.
+          source: source ?? cross.source,
+          sourceUrl: sourceUrl ?? cross.sourceUrl,
+        },
+      });
+      return "upserted";
+    }
+
+    await mergeIntoExisting(cross, event);
+    return "duplicate";
+  }
+
   await prisma.event.create({ data: event });
+  return "upserted";
+}
+
+/**
+ * Remove older lower-priority copies that already share a fingerprint.
+ * Keeps community / scraper rows over API duplicates.
+ */
+export async function purgeDuplicateEvents(): Promise<number> {
+  const events = await prisma.event.findMany({
+    select: {
+      id: true,
+      title: true,
+      venueName: true,
+      startTime: true,
+      source: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const bestByFingerprint = new Map<
+    string,
+    { id: string; rank: number; createdAt: Date }
+  >();
+  const toDelete: string[] = [];
+
+  for (const event of events) {
+    const key = eventFingerprint(event.title, event.venueName, event.startTime);
+    const rank = sourceRank(event.source);
+    const current = bestByFingerprint.get(key);
+    if (!current) {
+      bestByFingerprint.set(key, {
+        id: event.id,
+        rank,
+        createdAt: event.createdAt,
+      });
+      continue;
+    }
+
+    const incomingBetter =
+      rank > current.rank ||
+      (rank === current.rank && event.createdAt < current.createdAt);
+
+    if (incomingBetter) {
+      toDelete.push(current.id);
+      bestByFingerprint.set(key, {
+        id: event.id,
+        rank,
+        createdAt: event.createdAt,
+      });
+    } else {
+      toDelete.push(event.id);
+    }
+  }
+
+  if (toDelete.length === 0) return 0;
+
+  const result = await prisma.event.deleteMany({
+    where: { id: { in: toDelete } },
+  });
+  return result.count;
 }
 
 /** Manual stock CDN hosts — preserve these image_url values on upsert. */
@@ -273,17 +489,50 @@ export async function runAggregation(): Promise<AggregationResult> {
   let normalisedCount = 0;
   let skipped = 0;
   let upserted = 0;
+  let duplicatesSkipped = 0;
 
+  const normalised: NormalisedEvent[] = [];
   for (const raw of rawEvents) {
-    const normalised = normaliseEvent(raw);
-    if (!normalised) {
+    const event = normaliseEvent(raw);
+    if (!event) {
       skipped += 1;
       continue;
     }
-
     normalisedCount += 1;
-    await upsertNormalisedEvent(normalised);
+    normalised.push(event);
+  }
+
+  // Higher-ranked sources first so community/scrapers claim the fingerprint.
+  normalised.sort(
+    (a, b) => sourceRank(asString(b.source)) - sourceRank(asString(a.source)),
+  );
+
+  const seenInBatch = new Set<string>();
+  for (const event of normalised) {
+    const title = asString(event.title) ?? "";
+    const startTime =
+      event.startTime instanceof Date
+        ? event.startTime
+        : new Date(String(event.startTime));
+    const key = eventFingerprint(title, asString(event.venueName), startTime);
+    if (seenInBatch.has(key)) {
+      duplicatesSkipped += 1;
+      continue;
+    }
+
+    const outcome = await upsertNormalisedEvent(event);
+    if (outcome === "duplicate") {
+      duplicatesSkipped += 1;
+      continue;
+    }
+
+    seenInBatch.add(key);
     upserted += 1;
+  }
+
+  const duplicatesPurged = await purgeDuplicateEvents();
+  if (duplicatesPurged > 0) {
+    console.log(`[aggregator] purged ${duplicatesPurged} duplicate event(s)`);
   }
 
   return {
@@ -292,5 +541,7 @@ export async function runAggregation(): Promise<AggregationResult> {
     normalised: normalisedCount,
     skipped,
     upserted,
+    duplicatesSkipped,
+    duplicatesPurged,
   };
 }

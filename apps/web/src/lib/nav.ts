@@ -51,6 +51,8 @@ export const footerNav: NavItem[] = [
   { href: "/mcr-buzz", label: "MCR Buzz" },
   { href: "/search", label: "Search" },
   { href: "/submit-event", label: "Submit Event" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
   { href: "#newsletter", label: "Newsletter" },
   { href: "/privacy", label: "Privacy" },
 ];

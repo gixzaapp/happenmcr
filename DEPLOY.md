@@ -297,6 +297,20 @@ EVENT_ID=... STATUS=postponed pnpm set-event-status
 
 Postponed/cancelled events stay on their detail page with a badge, are hidden from Today / Weekend / Free / date / category browse lists, and keep that status across re-ingest.
 
+### One-off event intro (unique HappenMCR copy)
+
+```bash
+cd /home/deploy/happenmcr/apps/api
+EVENT_ID=... CUSTOM_INTRO='Your original paragraph…' LOCAL_TIP='Nearest Metrolink: …' pnpm set-event-intro
+```
+
+### Purge cross-source duplicate events
+
+```bash
+cd /home/deploy/happenmcr/apps/api
+pnpm dedupe-events
+```
+
 ---
 
 ## Useful PM2 / nginx

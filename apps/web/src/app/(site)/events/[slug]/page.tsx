@@ -17,6 +17,7 @@ import {
 import { REVALIDATE_SECONDS } from "@/lib/rendering";
 import { buildPageMetadata, truncateSeoText } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/config";
+import { shouldIndexEventPage } from "@/lib/event-indexability";
 import { canShowEventImage } from "@/lib/source";
 
 /** ISR: event detail HTML for crawlers, refreshed every 10 minutes. */
@@ -100,6 +101,8 @@ export async function generateMetadata({
     image: shareImage,
     imageAlt: event.title,
     type: "article",
+    index: shouldIndexEventPage(event),
+    follow: true,
   });
 }
 

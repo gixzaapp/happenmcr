@@ -26,6 +26,10 @@ model Event {
   isFree       Boolean  @default(false) @map("is_free")
   /** scheduled | postponed | cancelled — manual overrides survive re-ingest. */
   status       String   @default("scheduled")
+  /** Original HappenMCR copy shown above the feed description. */
+  customIntro  String?  @map("custom_intro") @db.Text
+  /** Optional local tip (transport, neighbourhood). */
+  localTip     String?  @map("local_tip") @db.Text
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   reminders    EventReminder[]
