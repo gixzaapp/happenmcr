@@ -13,6 +13,9 @@ import { eventMatchesQuery, isExcludedFromMcrBuzz, isMcrBuzzQuery } from "../lib
 
 const router: ExpressRouter = Router();
 
+/** Time-based browse lists hide postponed/cancelled shows. */
+const LISTING_ACTIVE: Prisma.EventWhereInput = { status: "scheduled" };
+
 async function listEvents(where?: Prisma.EventWhereInput): Promise<EventDto[]> {
   const events = await prisma.event.findMany({
     where,
@@ -38,6 +41,7 @@ router.get("/today", async (_req, res) => {
   try {
     const { start, end } = getTodayRange();
     const data = await listEvents({
+      ...LISTING_ACTIVE,
       startTime: { gte: start, lte: end },
     });
     const body: ApiResponse<EventDto[]> = { data };
@@ -60,6 +64,7 @@ router.get("/weekend", async (_req, res) => {
         ? weekend.start
         : today.start;
     const data = await listEvents({
+      ...LISTING_ACTIVE,
       startTime: { gte: start, lte: weekend.end },
     });
     const body: ApiResponse<EventDto[]> = { data };
@@ -77,6 +82,7 @@ router.get("/free", async (_req, res) => {
     // Upcoming only — from start of today (Europe/London), same window as "today".
     const { start } = getTodayRange();
     const data = await listEvents({
+      ...LISTING_ACTIVE,
       isFree: true,
       startTime: { gte: start },
     });
@@ -129,6 +135,7 @@ router.get("/date/:ymd", async (req, res) => {
     }
 
     const data = await listEvents({
+      ...LISTING_ACTIVE,
       startTime: { gte: range.start, lte: range.end },
     });
     const body: ApiResponse<EventDto[]> = { data };
@@ -156,6 +163,7 @@ router.get("/category/:slug", async (req, res) => {
     // Upcoming only (from start of today, Europe/London) — soonest upcoming first.
     const { start } = getTodayRange();
     const events = await listEvents({
+      ...LISTING_ACTIVE,
       category: { not: null },
       startTime: { gte: start },
     });

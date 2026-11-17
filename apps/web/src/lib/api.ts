@@ -250,6 +250,7 @@ export function pickTrending(
 
   return events
     .filter((event) => {
+      if (event.status && event.status !== "scheduled") return false;
       const time = new Date(event.start_time).getTime();
       return Number.isFinite(time) && time >= start && time <= end;
     })

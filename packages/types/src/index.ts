@@ -11,6 +11,8 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+export type EventStatus = "scheduled" | "postponed" | "cancelled";
+
 export interface Event {
   id: string;
   title: string;
@@ -28,6 +30,7 @@ export interface Event {
   image_url: string | null;
   ticket_url: string | null;
   is_free: boolean;
+  status: EventStatus;
 }
 
 export interface CategoryInfo {

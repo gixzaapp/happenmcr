@@ -287,6 +287,16 @@ Stock CDNs (`cdn.pixabay.com`, `images.unsplash.com`) are allowed in the web app
 
 After changing an event image, hard-refresh the event page (and ensure web was rebuilt with the stock-CDN allowlist).
 
+### One-off event status (postponed / cancelled)
+
+```bash
+cd /home/deploy/happenmcr/apps/api
+EVENT_ID=... STATUS=postponed pnpm set-event-status
+# STATUS=scheduled|postponed|cancelled
+```
+
+Postponed/cancelled events stay on their detail page with a badge, are hidden from Today / Weekend / Free / date / category browse lists, and keep that status across re-ingest.
+
 ---
 
 ## Useful PM2 / nginx

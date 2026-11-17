@@ -1,6 +1,11 @@
-import type { Event as EventDto } from "@happenmcr/types";
+import type { Event as EventDto, EventStatus } from "@happenmcr/types";
 import type { Event as PrismaEvent } from "@prisma/client";
 import { resolveCampusVenueFromLinks } from "./campus-venue.js";
+
+function toEventStatus(value: string): EventStatus {
+  if (value === "postponed" || value === "cancelled") return value;
+  return "scheduled";
+}
 
 export function toEventDto(event: PrismaEvent): EventDto {
   const campus = resolveCampusVenueFromLinks(
@@ -28,5 +33,6 @@ export function toEventDto(event: PrismaEvent): EventDto {
     image_url: event.imageUrl,
     ticket_url: event.ticketUrl,
     is_free: event.isFree,
+    status: toEventStatus(event.status),
   };
 }

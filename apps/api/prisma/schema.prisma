@@ -24,6 +24,8 @@ model Event {
   imageUrl     String?  @map("image_url")
   ticketUrl    String?  @map("ticket_url")
   isFree       Boolean  @default(false) @map("is_free")
+  /** scheduled | postponed | cancelled — manual overrides survive re-ingest. */
+  status       String   @default("scheduled")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   reminders    EventReminder[]
@@ -31,6 +33,7 @@ model Event {
   @@index([startTime])
   @@index([category])
   @@index([source])
+  @@index([status])
   @@map("events")
 }
 

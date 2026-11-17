@@ -19,12 +19,19 @@ export type EventCardProps = {
   titleAs?: "h2" | "h3";
   /** Event id — when set, cards load a resized local media URL. */
   id?: string;
+  status?: Event["status"];
 };
 
 export function eventToCardProps(
   event: Pick<
     Event,
-    "id" | "title" | "start_time" | "venue_name" | "image_url" | "source"
+    | "id"
+    | "title"
+    | "start_time"
+    | "venue_name"
+    | "image_url"
+    | "source"
+    | "status"
   >,
 ): EventCardProps {
   return {
@@ -35,6 +42,7 @@ export function eventToCardProps(
     image: event.image_url,
     source: event.source,
     href: buildEventPath(event),
+    status: event.status ?? "scheduled",
   };
 }
 
@@ -48,12 +56,15 @@ export function EventCard({
   className = "",
   titleAs = "h2",
   id,
+  status = "scheduled",
 }: EventCardProps) {
   const formattedDate = formatEventDate(date);
   const useSymbolic = shouldUseSymbolicEventImage(source, image);
   const TitleTag = titleAs;
   const imageSrc =
     image && id ? eventMediaPath(id, "card") : image || null;
+  const isPostponed = status === "postponed";
+  const isCancelled = status === "cancelled";
 
   const body = (
     <>
@@ -73,15 +84,26 @@ export function EventCard({
         ) : (
           <EventSymbolicPoster title={title} />
         )}
+        {isPostponed || isCancelled ? (
+          <span className="absolute left-2 top-2 rounded-md bg-industrial-black/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-canvas-white">
+            {isCancelled ? "Cancelled" : "Postponed"}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col gap-2 px-1 pt-4">
-        <time
-          dateTime={typeof date === "string" ? date : date.toISOString()}
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-primary"
-        >
-          {formattedDate}
-        </time>
+        {isPostponed || isCancelled ? (
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+            {isCancelled ? "Cancelled" : "Postponed — new date TBA"}
+          </span>
+        ) : (
+          <time
+            dateTime={typeof date === "string" ? date : date.toISOString()}
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-primary"
+          >
+            {formattedDate}
+          </time>
+        )}
         <TitleTag className="font-display text-lg font-semibold leading-snug tracking-tight text-industrial-black transition group-hover:text-primary">
           {title}
         </TitleTag>

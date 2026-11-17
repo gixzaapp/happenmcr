@@ -227,15 +227,19 @@ async function upsertNormalisedEvent(event: NormalisedEvent): Promise<void> {
   if (source && sourceUrl) {
     const existing = await prisma.event.findFirst({
       where: { source, sourceUrl },
-      select: { id: true, imageUrl: true },
+      select: { id: true, imageUrl: true, status: true },
     });
 
     if (existing) {
       // Keep manual stock CDN overrides (Pixabay / Unsplash) across re-ingest.
-      const data =
-        existing.imageUrl && isStockImageUrl(existing.imageUrl)
-          ? { ...event, imageUrl: existing.imageUrl }
-          : event;
+      const data: Prisma.EventUpdateInput = {
+        ...event,
+        // Manual postponed/cancelled must survive listing scrapes.
+        status: existing.status,
+      };
+      if (existing.imageUrl && isStockImageUrl(existing.imageUrl)) {
+        data.imageUrl = existing.imageUrl;
+      }
 
       await prisma.event.update({
         where: { id: existing.id },

@@ -70,6 +70,16 @@ export function EventDetail({ event }: EventDetailProps) {
         <EventBackButton />
 
         <div className="flex flex-wrap items-center gap-3 text-sm">
+          {event.status === "postponed" ? (
+            <span className="rounded-md bg-industrial-black px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-canvas-white">
+              Postponed
+            </span>
+          ) : null}
+          {event.status === "cancelled" ? (
+            <span className="rounded-md bg-industrial-black px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-canvas-white">
+              Cancelled
+            </span>
+          ) : null}
           {event.is_free ? (
             <span className="rounded-md bg-[color:var(--accent-soft)] px-2.5 py-1 font-semibold text-[color:var(--accent)]">
               Free
@@ -95,13 +105,21 @@ export function EventDetail({ event }: EventDetailProps) {
               When
             </dt>
             <dd className="mt-1 text-[color:var(--ink)]">
-              <time dateTime={event.start_time}>{startLabel}</time>
-              {endLabel ? (
+              {event.status === "postponed" ? (
+                <span>Postponed — new date TBA</span>
+              ) : event.status === "cancelled" ? (
+                <span>Cancelled</span>
+              ) : (
                 <>
-                  {" "}
-                  – <time dateTime={event.end_time!}>{endLabel}</time>
+                  <time dateTime={event.start_time}>{startLabel}</time>
+                  {endLabel ? (
+                    <>
+                      {" "}
+                      – <time dateTime={event.end_time!}>{endLabel}</time>
+                    </>
+                  ) : null}
                 </>
-              ) : null}
+              )}
             </dd>
           </div>
 
@@ -181,7 +199,9 @@ export function EventDetail({ event }: EventDetailProps) {
           >
             This weekend
           </Link>
-          <EventNotifyForm eventId={event.id} startTime={event.start_time} />
+          {event.status === "scheduled" ? (
+            <EventNotifyForm eventId={event.id} startTime={event.start_time} />
+          ) : null}
         </div>
 
         <ExploreMoreLinks links={eventExploreLinks(event)} />
