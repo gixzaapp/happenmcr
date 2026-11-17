@@ -2,7 +2,11 @@ import type { MetadataRoute } from "next";
 import { buildEventPath, getEventCategory, type Event } from "@happenmcr/types";
 import { getAllEvents, listIndexableCategories, listIndexableVenues } from "@/lib/api";
 import { getSiteUrl } from "@/lib/config";
-import { londonDateHorizon, londonYmd } from "@/lib/format";
+import {
+  MIN_DATE_EVENTS_FOR_INDEX,
+  shouldIndexEventPage,
+} from "@/lib/event-indexability";
+import { londonYmd } from "@/lib/format";
 import { getLensPhotos } from "@/lib/lens-photos";
 import { listMcrBuzzSections, mcrBuzzPath } from "@/lib/mcr-buzz";
 import { MCR_HISTORY_PATH, MCR_HISTORY_PUBLISHED } from "@/lib/mcr-history";
@@ -12,7 +16,6 @@ import {
   MCR_ON_LENS_PATH,
 } from "@/lib/mcr-on-lens";
 import { POETS_CORNER_PATH } from "@/lib/poets-corner";
-import { DATE_ISR_HORIZON_DAYS } from "@/lib/rendering";
 import { listEditorialHubs } from "@/lib/editorial-hubs";
 import { WHATS_ON_MANCHESTER_PATH } from "@/lib/seo";
 
@@ -207,13 +210,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  // Only sitemap events we would actually index (retention + not thin).
   // Prefer sitemap generation time when the event is still upcoming — reflects
   // re-ingest / listing presence rather than a stale one-off build stamp.
-  // Drop events that ended (or started) more than SITEMAP_EVENT_RETENTION_DAYS ago.
   const retentionCutoff =
     generatedAt.getTime() - SITEMAP_EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
   const eventPages: MetadataRoute.Sitemap = events
     .filter((event) => {
+      if (!shouldIndexEventPage(event, generatedAt)) return false;
       const endMs = event.end_time
         ? new Date(event.end_time).getTime()
         : new Date(event.start_time).getTime();
@@ -254,14 +258,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const datePages: MetadataRoute.Sitemap = londonDateHorizon(
-    DATE_ISR_HORIZON_DAYS,
-  ).map((ymd) => ({
-    url: absoluteUrl(`/events/date/${ymd}`),
-    lastModified: ymd === todayYmd ? generatedAt : catalogLastMod,
-    changeFrequency: "daily" as const,
-    priority: ymd === todayYmd ? 0.85 : 0.55,
-  }));
+  // Date hubs: only today/future days that already have enough listings.
+  // Dumping a blank 90-day calendar into the sitemap invited crawl waste.
+  const eventsByYmd = new Map<string, number>();
+  for (const event of events) {
+    const ymd = londonYmd(new Date(event.start_time));
+    if (ymd < todayYmd) continue;
+    eventsByYmd.set(ymd, (eventsByYmd.get(ymd) ?? 0) + 1);
+  }
+  const datePages: MetadataRoute.Sitemap = [...eventsByYmd.entries()]
+    .filter(([, count]) => count >= MIN_DATE_EVENTS_FOR_INDEX)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([ymd]) => ({
+      url: absoluteUrl(`/events/date/${ymd}`),
+      lastModified: ymd === todayYmd ? generatedAt : catalogLastMod,
+      changeFrequency: "daily" as const,
+      priority: ymd === todayYmd ? 0.85 : 0.55,
+    }));
 
   // Ensure unique URLs (venue slug collisions collapse by path).
   const byUrl = new Map<string, MetadataRoute.Sitemap[number]>();

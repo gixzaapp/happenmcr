@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { EventList } from "@/components/events";
 import { JsonLd } from "@/components/seo";
 import { getEventsByDate } from "@/lib/api";
+import { shouldIndexDatePage } from "@/lib/event-indexability";
 import {
   formatLondonDayFromYmd,
   isValidYmd,
   londonDateHorizon,
+  londonYmd,
 } from "@/lib/format";
 import {
   buildBreadcrumbJsonLd,
@@ -71,8 +73,8 @@ export async function generateMetadata({
       "Manchester gigs",
       "HappenMCR",
     ],
-    // Thin date indexes look like empty doorways to AdSense / search.
-    index: count >= 3,
+    // Past / thin date indexes look like empty doorways to AdSense / search.
+    index: shouldIndexDatePage(ymd, count, londonYmd()),
     follow: true,
   });
 }
@@ -83,6 +85,11 @@ export default async function EventsDatePage({ params }: EventsDatePageProps) {
 
   const events = await getEventsByDate(ymd);
   const dayLabel = formatLondonDayFromYmd(ymd);
+  const today = londonYmd();
+
+  // Empty past dates are soft-404 bait — return a real 404 instead of a blank 200.
+  if (events.length === 0 && ymd < today) notFound();
+
   const countLabel =
     events.length === 1 ? "1 event" : `${events.length} events`;
 

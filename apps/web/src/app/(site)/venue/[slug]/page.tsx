@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   buildVenuePath,
   slugifyVenue,
@@ -80,10 +80,9 @@ export default async function VenuePage({ params }: VenuePageProps) {
 
   if (!venueName) notFound();
 
+  // Canonical is set in metadata — avoid App Router permanentRedirect (GSC
+  // "Redirect error" risk). Category aliases stay in next.config redirects.
   const path = buildVenuePath(venueName);
-  if (`/venue/${params.slug}` !== path) {
-    permanentRedirect(path);
-  }
 
   const countLabel =
     matches.length === 1 ? "1 event" : `${matches.length} events`;

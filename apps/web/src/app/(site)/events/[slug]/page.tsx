@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   buildEventPath,
   parseEventPathSegment,
@@ -115,10 +115,10 @@ export default async function EventDetailPage({
   const event = await getEventById(parsed.id);
   if (!event) notFound();
 
+  // Do not 308 slug mismatches here — App Router permanentRedirect has produced
+  // GSC "Redirect error" (308 without a usable Location). Metadata already emits
+  // the canonical via buildEventPath / buildPageMetadata.
   const canonicalPath = buildEventPath(event);
-  if (`/events/${params.slug}` !== canonicalPath) {
-    permanentRedirect(canonicalPath);
-  }
 
   return (
     <>

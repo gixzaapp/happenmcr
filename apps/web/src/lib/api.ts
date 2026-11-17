@@ -202,7 +202,7 @@ export function isIndexableCategory(
 }
 
 /** Minimum events at a venue before the hub is sitemap'd / indexed. */
-export const MIN_VENUE_EVENTS_FOR_INDEX = 2;
+export const MIN_VENUE_EVENTS_FOR_INDEX = 3;
 
 export type VenueInfo = {
   slug: string;

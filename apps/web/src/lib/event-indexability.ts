@@ -1,4 +1,5 @@
 import type { Event } from "@happenmcr/types";
+import { londonYmd } from "@/lib/format";
 
 /** Past shows stay reachable but drop out of the index after this window. */
 export const EVENT_INDEX_RETENTION_DAYS = 7;
@@ -43,6 +44,22 @@ export function shouldIndexEventPage(event: Event, now = new Date()): boolean {
     return false;
   }
   return true;
+}
+
+/** Minimum events before a `/events/date/YYYY-MM-DD` page is indexed / sitemap'd. */
+export const MIN_DATE_EVENTS_FOR_INDEX = 3;
+
+/**
+ * Date hubs: only index today/future days with enough listings.
+ * Past calendar days stay reachable but noindex (soft-404 / bloat risk).
+ */
+export function shouldIndexDatePage(
+  ymd: string,
+  eventCount: number,
+  todayYmd: string = londonYmd(),
+): boolean {
+  if (ymd < todayYmd) return false;
+  return eventCount >= MIN_DATE_EVENTS_FOR_INDEX;
 }
 
 /** Fallback body when the feed left no useful description. */

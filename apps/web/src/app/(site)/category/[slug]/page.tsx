@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { EventList } from "@/components/events";
 import {
   categoryExploreLinks,
@@ -81,13 +81,8 @@ export async function generateMetadata({
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  // Alias → canonical is primarily handled in next.config redirects (reliable
-  // Location header). Keep this as a runtime safety net for uncached paths.
-  const curated = getEventCategory(params.slug);
-  if (curated && curated.id !== params.slug && curated.id !== "other") {
-    permanentRedirect(`/category/${curated.id}`);
-  }
-
+  // Alias → canonical lives in next.config redirects (real Location header).
+  // Avoid App Router permanentRedirect here — it has triggered GSC Redirect errors.
   const result = await getCategoryEvents(params.slug);
 
   if (!result) {
