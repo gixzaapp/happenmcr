@@ -113,7 +113,12 @@ export function MobileNav() {
         </p>
         <ul className="mt-6 flex flex-col gap-1">
           {primaryNav.map((item) => {
-            const active = pathname === item.href;
+            const active =
+              pathname === item.href ||
+              (item.href === "/community" &&
+                pathname.startsWith("/community")) ||
+              (item.href === "/things-to-do-in-manchester" &&
+                pathname.startsWith("/things-to-do"));
             return (
               <li key={`${item.href}-${item.label}`}>
                 <Link

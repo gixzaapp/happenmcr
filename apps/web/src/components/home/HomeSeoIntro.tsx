@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/events/today", label: "Events in Manchester today" },
+  { href: "/things-to-do-in-manchester", label: "Things to do in Manchester" },
   { href: "/whats-on-manchester", label: "What's on in Manchester" },
   { href: "/events/weekend", label: "This weekend" },
   { href: "/whats-on/free-events-manchester", label: "Free events guide" },

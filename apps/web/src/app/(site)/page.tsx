@@ -7,6 +7,7 @@ import {
   Newsletter,
   type VibeCard,
 } from "@/components/home";
+import { ThingsToDoHomeTeaser } from "@/components/things-to-do";
 import { JsonLd } from "@/components/seo";
 import { getAllEvents, getTodayEvents, pickTrending } from "@/lib/api";
 import { buildLocalBusinessJsonLd, buildOrganizationJsonLd } from "@/lib/jsonld";
@@ -135,6 +136,7 @@ export default async function HomePage() {
       <HomeHero todayEvents={todayEvents} />
       <FeaturedDiscovery events={featured} />
       <ChooseVibe vibes={vibes} />
+      <ThingsToDoHomeTeaser />
       <HomeSeoIntro />
       <Newsletter />
     </>

@@ -132,25 +132,24 @@ export function SiteHeader() {
           Happen<span className="text-bee-yellow">MCR</span>
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-5 lg:gap-8 md:flex">
           {primaryNav.map((item) => {
-            const active = pathname === item.href;
+            const active =
+              pathname === item.href ||
+              (item.href === "/community" &&
+                pathname.startsWith("/community")) ||
+              (item.href === "/things-to-do-in-manchester" &&
+                pathname.startsWith("/things-to-do"));
             return (
               <Link
                 key={`${item.href}-${item.label}`}
                 href={item.href}
-                className={`font-display text-lg font-semibold transition duration-200 ${
-                  active ||
-                  (item.href === "/community" && pathname.startsWith("/community"))
+                className={`font-display text-base font-semibold transition duration-200 lg:text-lg ${
+                  active
                     ? "text-industrial-black"
                     : "text-secondary hover:text-industrial-black"
                 }`}
-                aria-current={
-                  active ||
-                  (item.href === "/community" && pathname.startsWith("/community"))
-                    ? "page"
-                    : undefined
-                }
+                aria-current={active ? "page" : undefined}
               >
                 {item.label}
               </Link>

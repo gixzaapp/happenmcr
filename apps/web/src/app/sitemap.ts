@@ -18,6 +18,7 @@ import {
 import { POETS_CORNER_PATH } from "@/lib/poets-corner";
 import { listEditorialHubs } from "@/lib/editorial-hubs";
 import { WHATS_ON_MANCHESTER_PATH } from "@/lib/seo";
+import { THINGS_TO_DO_PATH } from "@/lib/things-to-do";
 
 /**
  * Regenerate sitemap hourly from live API data so <lastmod> tracks content
@@ -111,6 +112,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: generatedAt,
       changeFrequency: "daily",
       priority: 0.95,
+    },
+    {
+      url: absoluteUrl(THINGS_TO_DO_PATH),
+      lastModified: generatedAt,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: absoluteUrl(EVENTS_TODAY_PATH),

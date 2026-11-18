@@ -22,6 +22,7 @@ export const primaryNav: NavItem[] = [
   { href: "/category/nightlife", label: "Nightlife" },
   { href: "/community", label: "Community" },
   { href: "/category/festivals", label: "Festivals" },
+  { href: "/things-to-do-in-manchester", label: "Things to Do" },
 ];
 
 /** Local Manchester buzz — children come from the MCR Buzz registry. */
@@ -47,6 +48,7 @@ export const timingNav: NavItem[] = [
 
 export const footerNav: NavItem[] = [
   { href: "/whats-on-manchester", label: "What's On" },
+  { href: "/things-to-do-in-manchester", label: "Things to Do" },
   { href: "/mcr-buzz", label: "MCR Buzz" },
   { href: "/submit-event", label: "Submit Event" },
   { href: "/about", label: "About" },
