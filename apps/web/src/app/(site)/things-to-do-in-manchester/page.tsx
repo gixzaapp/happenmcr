@@ -4,7 +4,7 @@ import { EventList } from "@/components/events";
 import { ExploreMoreLinks, JsonLd } from "@/components/seo";
 import {
   ExperienceCard,
-  ExperienceCategoryGrid,
+  ExperienceCategoryFilter,
 } from "@/components/things-to-do";
 import { getViatorExperiences, getWeekendEvents } from "@/lib/api";
 import { formatWeekendRange } from "@/lib/format";
@@ -65,9 +65,16 @@ export default async function ThingsToDoInManchesterPage({
     weekendEvents.length === 1
       ? "1 event"
       : `${weekendEvents.length} events`;
+  const resultsHeading = activeCategory
+    ? activeCategory.label
+    : "Featured experiences";
+  const countLabel =
+    experiences.length === 1
+      ? "1 experience"
+      : `${experiences.length} experiences`;
 
   return (
-    <div className="mx-auto w-full max-w-site px-grid-margin py-12 sm:py-16">
+    <div className="mx-auto w-full max-w-site px-grid-margin py-8 sm:py-12">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           homeBreadcrumb(),
@@ -84,77 +91,58 @@ export default async function ThingsToDoInManchesterPage({
       />
 
       <header className="max-w-3xl">
-        <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-bee-yellow">
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-bee-yellow">
           Experiences &amp; activities
         </p>
-        <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-industrial-black sm:text-5xl">
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-industrial-black sm:text-4xl">
           Things to Do in Manchester
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-secondary sm:text-lg">
-          Explore Manchester beyond the usual gigs and nightlife. Discover city
-          tours, unforgettable experiences, attractions, food adventures and
-          activities worth trying.
+        <p className="mt-3 text-base leading-relaxed text-secondary">
+          Tours, attractions, food experiences and activities — beyond gigs and
+          nightlife.
         </p>
       </header>
 
-      <section
-        id="browse-categories"
-        aria-labelledby="browse-categories-heading"
-        className="mt-14"
-      >
-        <h2
-          id="browse-categories-heading"
-          className="font-display text-2xl font-bold tracking-tight text-industrial-black sm:text-3xl"
-        >
-          Browse by category
-        </h2>
-        <p className="mt-3 max-w-2xl text-base text-secondary">
-          Jump into a vibe — or clear a filter to see every curated experience.
-        </p>
-        <div className="mt-8">
-          <ExperienceCategoryGrid
-            categories={EXPERIENCE_CATEGORIES}
-            titleAs="h3"
-            columns="page"
-          />
-        </div>
-        {activeCategory ? (
-          <p className="mt-6 text-sm text-secondary">
-            Showing{" "}
-            <span className="font-semibold text-industrial-black">
-              {activeCategory.label}
-            </span>
-            .{" "}
-            <Link
-              href={THINGS_TO_DO_PATH}
-              className="font-semibold text-industrial-black underline decoration-bee-yellow underline-offset-4"
-            >
-              View all experiences
-            </Link>
-          </p>
-        ) : null}
-      </section>
+      <ExperienceCategoryFilter
+        categories={EXPERIENCE_CATEGORIES}
+        activeId={activeCategory?.id ?? null}
+      />
 
       <section
-        id="featured-experiences"
-        aria-labelledby="featured-experiences-heading"
-        className="mt-16"
+        id="experiences"
+        aria-labelledby="experiences-heading"
+        className="mt-8 scroll-mt-28"
       >
-        <h2
-          id="featured-experiences-heading"
-          className="font-display text-2xl font-bold tracking-tight text-industrial-black sm:text-3xl"
-        >
-          Featured experiences
-        </h2>
-        <p className="mt-3 max-w-2xl text-base text-secondary">
-          Manchester tours and activities from Viator plus local HappenMCR
-          picks. Prices and availability are confirmed on the booking page — we
-          do not invent them. Partner listings open on Viator.com; we do not
-          republish their unique product content for search indexing.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2
+              id="experiences-heading"
+              className="font-display text-xl font-bold tracking-tight text-industrial-black sm:text-2xl"
+            >
+              {resultsHeading}
+            </h2>
+            <p className="mt-1 text-sm text-secondary">
+              {countLabel}
+              {activeCategory ? (
+                <>
+                  {" "}
+                  ·{" "}
+                  <Link
+                    href={`${THINGS_TO_DO_PATH}#experiences`}
+                    className="font-semibold text-industrial-black underline decoration-bee-yellow underline-offset-4"
+                  >
+                    Clear filter
+                  </Link>
+                </>
+              ) : (
+                " · Viator + HappenMCR picks"
+              )}
+            </p>
+          </div>
+        </div>
 
         {experiences.length > 0 ? (
-          <ul className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {experiences.map((experience) => (
               <li key={experience.id}>
                 <ExperienceCard experience={experience} titleAs="h3" />
@@ -162,48 +150,47 @@ export default async function ThingsToDoInManchesterPage({
             ))}
           </ul>
         ) : (
-          <div className="mt-8 rounded-xl border border-industrial-black/10 bg-surface-container-low p-6 sm:p-8">
+          <div className="mt-6 rounded-xl border border-industrial-black/10 bg-surface-container-low p-6">
             <p className="font-display text-lg font-semibold text-industrial-black">
               {activeCategory
                 ? `No ${activeCategory.label.toLowerCase()} listed yet`
                 : "Experiences coming soon"}
             </p>
             <p className="mt-2 text-base text-secondary">
-              We&apos;re preparing curated tours and activities for this guide.
-              Meanwhile, browse weekend events below or jump into gigs and
-              nightlife.
+              Try another category, or browse weekend events below.
             </p>
             {activeCategory ? (
               <Link
-                href={THINGS_TO_DO_PATH}
+                href={`${THINGS_TO_DO_PATH}#experiences`}
                 className="mt-4 inline-flex font-semibold text-industrial-black underline decoration-bee-yellow underline-offset-4"
               >
-                Clear category filter
+                View all experiences
               </Link>
             ) : null}
           </div>
         )}
 
-        <p className="mt-6 text-xs leading-relaxed text-secondary">
+        <p className="mt-5 text-xs leading-relaxed text-secondary">
           Some outbound links may be affiliate or partner links. HappenMCR may
           earn a commission if you book through them, at no extra cost to you.
+          Partner listings open on Viator.com.
         </p>
       </section>
 
       <section
         id="weekend"
         aria-labelledby="weekend-things-heading"
-        className="mt-16"
+        className="mt-14"
       >
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2
               id="weekend-things-heading"
-              className="font-display text-2xl font-bold tracking-tight text-industrial-black sm:text-3xl"
+              className="font-display text-xl font-bold tracking-tight text-industrial-black sm:text-2xl"
             >
               Things to do this weekend
             </h2>
-            <p className="mt-2 text-sm text-secondary sm:text-base">
+            <p className="mt-1 text-sm text-secondary">
               {weekendLabel}. {weekendCount} from the HappenMCR calendar.
             </p>
           </div>
@@ -214,7 +201,7 @@ export default async function ThingsToDoInManchesterPage({
             Full weekend list
           </Link>
         </div>
-        <div className="mt-8">
+        <div className="mt-6">
           <EventList
             events={weekendEvents.slice(0, 8)}
             emptyMessage="No weekend events listed yet — check back soon."

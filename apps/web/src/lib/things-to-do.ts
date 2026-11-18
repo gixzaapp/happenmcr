@@ -94,7 +94,7 @@ export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
     label: "Walking & City Tours",
     shortLabel: "Walking Tours",
     description: "Guided walks and city routes across Manchester.",
-    href: `${THINGS_TO_DO_PATH}?category=walking-city-tours`,
+    href: `${THINGS_TO_DO_PATH}?category=walking-city-tours#experiences`,
     image: CATEGORY_IMAGES.walking,
   },
   {
@@ -102,7 +102,7 @@ export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
     label: "Stadium & Sports Experiences",
     shortLabel: "Stadium Experiences",
     description: "Stadium tours and matchday-adjacent experiences.",
-    href: `${THINGS_TO_DO_PATH}?category=stadium-sports`,
+    href: `${THINGS_TO_DO_PATH}?category=stadium-sports#experiences`,
     image: CATEGORY_IMAGES.stadium,
   },
   {
@@ -110,7 +110,7 @@ export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
     label: "Food & Drink Experiences",
     shortLabel: "Food Experiences",
     description: "Food halls, tastings, and culinary city highlights.",
-    href: `${THINGS_TO_DO_PATH}?category=food-drink`,
+    href: `${THINGS_TO_DO_PATH}?category=food-drink#experiences`,
     image: CATEGORY_IMAGES.food,
   },
   {
@@ -118,7 +118,7 @@ export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
     label: "Sightseeing & Attractions",
     shortLabel: "Sightseeing",
     description: "Museums, landmarks, and classic Manchester sights.",
-    href: `${THINGS_TO_DO_PATH}?category=sightseeing-attractions`,
+    href: `${THINGS_TO_DO_PATH}?category=sightseeing-attractions#experiences`,
     image: CATEGORY_IMAGES.sightseeing,
   },
   {
@@ -126,7 +126,7 @@ export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
     label: "Unique Experiences",
     shortLabel: "Unique Experiences",
     description: "One-off and distinctive things to try in the city.",
-    href: `${THINGS_TO_DO_PATH}?category=unique-experiences`,
+    href: `${THINGS_TO_DO_PATH}?category=unique-experiences#experiences`,
     image: CATEGORY_IMAGES.unique,
   },
   {
@@ -134,7 +134,7 @@ export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
     label: "Free Things to Do",
     shortLabel: "Free Things to Do",
     description: "No-ticket and free-entry Manchester plans.",
-    href: `${THINGS_TO_DO_PATH}?category=free-things-to-do`,
+    href: `${THINGS_TO_DO_PATH}?category=free-things-to-do#experiences`,
     image: CATEGORY_IMAGES.free,
   },
 ];
