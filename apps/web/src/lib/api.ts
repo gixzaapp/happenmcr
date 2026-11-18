@@ -10,6 +10,7 @@ import {
   slugifyVenue,
 } from "@happenmcr/types";
 import { getApiBaseUrl, REVALIDATE_SECONDS } from "./config";
+import type { Experience } from "@/lib/things-to-do";
 
 /** Minimum upcoming events before a curated category is sitemap'd / indexed. */
 export const MIN_CATEGORY_EVENTS_FOR_INDEX = 3;
@@ -61,6 +62,36 @@ export function getWeekendEvents(): Promise<Event[]> {
 
 export function getFreeEvents(): Promise<Event[]> {
   return fetchEvents("/events/free");
+}
+
+/** Live Viator Manchester experiences from the API (empty if key/API fails). */
+export async function getViatorExperiences(options?: {
+  category?: string;
+  cache?: number | "no-store";
+}): Promise<Experience[]> {
+  const params = new URLSearchParams();
+  if (options?.category) params.set("category", options.category);
+  const qs = params.toString();
+  const url = `${getApiBaseUrl()}/experiences${qs ? `?${qs}` : ""}`;
+  const init: RequestInit =
+    options?.cache === "no-store"
+      ? { cache: "no-store" }
+      : { next: { revalidate: options?.cache ?? REVALIDATE_SECONDS } };
+
+  try {
+    const response = await fetch(url, init);
+    const body = (await response.json().catch(() => null)) as ApiResponse<
+      Experience[]
+    > | null;
+    if (!response.ok) {
+      console.error(`[api] ${url} failed with ${response.status}`);
+      return body?.data ?? [];
+    }
+    return body?.data ?? [];
+  } catch (error) {
+    console.error(`[api] ${url} request failed`, error);
+    return [];
+  }
 }
 
 export function getEventsByDate(ymd: string): Promise<Event[]> {

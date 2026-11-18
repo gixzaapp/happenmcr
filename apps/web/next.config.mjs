@@ -31,6 +31,8 @@ const EVENT_IMAGE_HOSTS = [
   "mmu.ac.uk",
   "www.salford.ac.uk",
   "salford.ac.uk",
+  "media-cdn.tripadvisor.com",
+  "media.tacdn.com",
 ];
 
 /**

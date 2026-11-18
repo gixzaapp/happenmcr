@@ -74,17 +74,18 @@ const VIATOR_BOOKING_HOSTS = new Set([
   "www.viator.com",
 ]);
 
+/** Known-good Unsplash URLs (verified 200). Avoid broken IDs / wrong-city landmarks. */
 const CATEGORY_IMAGES = {
   walking:
-    "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=900&q=80",
   stadium:
     "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=900&q=80",
   food: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80",
   sightseeing:
-    "https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
   unique:
-    "https://images.unsplash.com/photo-1533174072545-7a69e77a9011?auto=format&fit=crop&w=900&q=80",
-  free: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=80",
+  free: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=900&q=80",
 } as const;
 
 export const EXPERIENCE_CATEGORIES: ExperienceCategory[] = [
@@ -151,8 +152,7 @@ const MANUAL_EXPERIENCES: Experience[] = [
     slug: "science-and-industry-museum",
     description:
       "Explore Manchester’s industrial story in the world’s oldest surviving passenger railway station — permanent galleries are free to enter.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=900&q=80",
+    imageUrl: CATEGORY_IMAGES.free,
     category: "free-things-to-do",
     location: "Castlefield, Manchester",
     priceFrom: 0,
@@ -169,8 +169,7 @@ const MANUAL_EXPERIENCES: Experience[] = [
     slug: "manchester-art-gallery",
     description:
       "Free city-centre gallery with British art, design, and temporary exhibitions a short walk from St Peter’s Square.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&w=900&q=80",
+    imageUrl: CATEGORY_IMAGES.sightseeing,
     category: "sightseeing-attractions",
     location: "Mosley Street, Manchester",
     priceFrom: 0,
@@ -219,8 +218,7 @@ const MANUAL_EXPERIENCES: Experience[] = [
     slug: "peoples-history-museum",
     description:
       "Britain’s national museum of democracy on the Irwell — banners, protest history, and riverside walks nearby.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=900&q=80",
+    imageUrl: CATEGORY_IMAGES.sightseeing,
     category: "sightseeing-attractions",
     location: "Left Bank, Manchester",
     affiliateUrl: "https://phm.org.uk/",
@@ -235,8 +233,7 @@ const MANUAL_EXPERIENCES: Experience[] = [
     slug: "castlefield-canal-walk",
     description:
       "A free self-guided stroll through Roman ruins, canal basins, and railway arches in Castlefield.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=900&q=80",
+    imageUrl: CATEGORY_IMAGES.walking,
     category: "walking-city-tours",
     location: "Castlefield, Manchester",
     priceFrom: 0,
@@ -269,8 +266,7 @@ const MANUAL_EXPERIENCES: Experience[] = [
     slug: "home-manchester",
     description:
       "Independent cinema, theatre, and gallery space at First Street — a distinctive night out beyond the usual gig circuit.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1533174072545-7a69e77a9011?auto=format&fit=crop&w=900&q=80",
+    imageUrl: CATEGORY_IMAGES.unique,
     category: "unique-experiences",
     location: "First Street, Manchester",
     affiliateUrl: "https://homemcr.org/",
@@ -345,25 +341,52 @@ export function resolveAffiliateUrl(
   return href;
 }
 
-/** Active experiences, deduped by provider + externalId/slug. */
-export function listExperiences(): Experience[] {
+function pushUnique(
+  out: Experience[],
+  seen: Set<string>,
+  experience: Experience,
+): void {
+  if (!experience.isActive) return;
+  if (
+    isLicensedPartnerContent(experience) &&
+    !resolveAffiliateUrl(experience)
+  ) {
+    return;
+  }
+  const key = experienceDedupeKey(experience);
+  if (seen.has(key)) return;
+  seen.add(key);
+  out.push(experience);
+}
+
+/** Manual curated experiences only. */
+export function listManualExperiences(): Experience[] {
   const seen = new Set<string>();
   const out: Experience[] = [];
   for (const experience of MANUAL_EXPERIENCES) {
-    if (!experience.isActive) continue;
-    // Partner rows without a valid outbound booking URL must not be shown.
-    if (
-      isLicensedPartnerContent(experience) &&
-      !resolveAffiliateUrl(experience)
-    ) {
-      continue;
-    }
-    const key = experienceDedupeKey(experience);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(experience);
+    pushUnique(out, seen, experience);
   }
   return out;
+}
+
+/**
+ * Merge Viator + manual. Viator first so partner inventory leads;
+ * manual fills gaps without duplicating provider:externalId keys.
+ */
+export function mergeExperiences(
+  viator: Experience[],
+  manual: Experience[] = listManualExperiences(),
+): Experience[] {
+  const seen = new Set<string>();
+  const out: Experience[] = [];
+  for (const experience of viator) pushUnique(out, seen, experience);
+  for (const experience of manual) pushUnique(out, seen, experience);
+  return out;
+}
+
+/** @deprecated Prefer mergeExperiences(getViatorExperiences()) on pages. */
+export function listExperiences(): Experience[] {
+  return listManualExperiences();
 }
 
 /** Experiences whose copy may appear in indexable SEO surfaces. */

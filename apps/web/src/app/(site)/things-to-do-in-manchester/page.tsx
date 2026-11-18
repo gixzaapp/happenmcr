@@ -6,7 +6,7 @@ import {
   ExperienceCard,
   ExperienceCategoryGrid,
 } from "@/components/things-to-do";
-import { getWeekendEvents } from "@/lib/api";
+import { getViatorExperiences, getWeekendEvents } from "@/lib/api";
 import { formatWeekendRange } from "@/lib/format";
 import {
   buildBreadcrumbJsonLd,
@@ -19,7 +19,8 @@ import {
   EXPERIENCE_CATEGORIES,
   filterExperiencesByCategory,
   getExperienceCategory,
-  listExperiences,
+  listManualExperiences,
+  mergeExperiences,
   THINGS_TO_DO_DESCRIPTION,
   THINGS_TO_DO_KEYWORDS,
   THINGS_TO_DO_PATH,
@@ -47,12 +48,18 @@ export default async function ThingsToDoInManchesterPage({
   const activeCategory = categoryParam
     ? getExperienceCategory(categoryParam)
     : null;
-  const allExperiences = listExperiences();
+  const [viatorExperiences, weekendEvents] = await Promise.all([
+    getViatorExperiences({ cache: REVALIDATE_SECONDS }),
+    getWeekendEvents(),
+  ]);
+  const allExperiences = mergeExperiences(
+    viatorExperiences,
+    listManualExperiences(),
+  );
   const experiences = filterExperiencesByCategory(
     allExperiences,
     activeCategory?.id,
   );
-  const weekendEvents = await getWeekendEvents();
   const weekendLabel = formatWeekendRange();
   const weekendCount =
     weekendEvents.length === 1
@@ -140,10 +147,10 @@ export default async function ThingsToDoInManchesterPage({
           Featured experiences
         </h2>
         <p className="mt-3 max-w-2xl text-base text-secondary">
-          Hand-picked Manchester experiences with official booking links. Paid
-          prices and availability live on the provider page — we do not invent
-          them here. Partner listings (e.g. Viator) are for booking only; we do
-          not republish their unique product content for search indexing.
+          Manchester tours and activities from Viator plus local HappenMCR
+          picks. Prices and availability are confirmed on the booking page — we
+          do not invent them. Partner listings open on Viator.com; we do not
+          republish their unique product content for search indexing.
         </p>
 
         {experiences.length > 0 ? (

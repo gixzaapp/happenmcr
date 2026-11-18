@@ -29,6 +29,7 @@ import submitEventRouter from "./routes/submit-event.js";
 import lensRouter from "./routes/lens.js";
 import poemsRouter from "./routes/poems.js";
 import poetProfilesRouter from "./routes/poet-profiles.js";
+import experiencesRouter from "./routes/experiences.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -133,6 +134,7 @@ app.get("/health", async (_req, res) => {
 });
 
 app.use("/events", eventsRouter);
+app.use("/experiences", experiencesRouter);
 app.use("/event-submissions", eventSubmissionsRouter);
 app.use("/ingest", ingestRouter);
 app.use("/stats", statsRouter);
