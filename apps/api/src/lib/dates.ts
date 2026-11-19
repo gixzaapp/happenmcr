@@ -29,13 +29,13 @@ function weekdayInTimeZone(date: Date, timeZone: string): number {
 }
 
 /** Convert a civil clock time in `timeZone` to a UTC Date. */
-function zonedDateTimeToUtc(
+export function zonedDateTimeToUtc(
   ymd: string,
   hours: number,
   minutes: number,
   seconds: number,
   ms: number,
-  timeZone: string,
+  timeZone: string = TIME_ZONE,
 ): Date {
   const [year, month, day] = ymd.split("-").map(Number);
   let utc = Date.UTC(year, month - 1, day, hours, minutes, seconds, ms);
@@ -78,6 +78,41 @@ function addDaysYmd(ymd: string, days: number): string {
   const [year, month, day] = ymd.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day + days));
   return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Parse submit-form / ops datetimes as Europe/London wall clock.
+ * - `YYYY-MM-DDTHH:mm` or `YYYY-MM-DDTHH:mm:ss` → London local
+ * - Strings with Z / offset → absolute instant (unchanged)
+ */
+export function parseLondonDateTime(value: string): Date | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const wall = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
+    trimmed,
+  );
+  if (wall) {
+    const ymd = wall[1];
+    const hours = Number(wall[2]);
+    const minutes = Number(wall[3]);
+    const seconds = Number(wall[4] ?? "0");
+    if (
+      hours > 23 ||
+      minutes > 59 ||
+      seconds > 59 ||
+      Number.isNaN(hours) ||
+      Number.isNaN(minutes) ||
+      Number.isNaN(seconds)
+    ) {
+      return null;
+    }
+    return zonedDateTimeToUtc(ymd, hours, minutes, seconds, 0, TIME_ZONE);
+  }
+
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
 }
 
 export function getTodayRange(reference = new Date()): { start: Date; end: Date } {

@@ -132,7 +132,7 @@ export function SubmitEventForm() {
     payload.set("title", form.title);
     payload.set(
       "startTime",
-      form.startTime ? new Date(form.startTime).toISOString() : "",
+      form.startTime.trim(),
     );
     payload.set("venueName", form.venueName);
     payload.set("description", form.description);

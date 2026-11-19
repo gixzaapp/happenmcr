@@ -2,6 +2,7 @@ import { resolveEventCategoryLabel } from "@happenmcr/types";
 import { Router, type Router as ExpressRouter } from "express";
 import multer from "multer";
 import { prisma } from "../db.js";
+import { parseLondonDateTime } from "../lib/dates.js";
 import { notifyEventSubmission } from "../services/submit-event/notify.js";
 import { notifySubmissionOnSlack } from "../services/slack/submission-notify.js";
 import { getObjectStorage } from "../services/storage/index.js";
@@ -38,9 +39,8 @@ function trimString(value: unknown, max: number): string | null {
 
 function parseStartTime(value: unknown): Date | null {
   if (typeof value !== "string" || !value.trim()) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date;
+  // datetime-local is Manchester wall time — never browser TZ via Date().
+  return parseLondonDateTime(value);
 }
 
 function parseIsFree(value: unknown): boolean {
